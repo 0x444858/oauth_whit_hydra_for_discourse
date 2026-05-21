@@ -1,0 +1,34 @@
+# 此systemd示例文件有如下假设，请根据实际情况修改
+# 1. 使用postgresql
+# 2. 使用user用户运行hydra
+# 3. hydra二进制文件所在位置为 /home/user/server/hydra/hydra
+# 4. hydra配置文件所在位置为 /home/user/server/hydra/config.yaml
+
+[Unit]
+Description=Ory Hydra OAuth2 & OpenID Connect Server
+Documentation=https://www.ory.com/docs/oauth2-oidc
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+# 运行 Hydra 的用户，这里是user
+User=user
+Group=user
+
+# Hydra 所在的目录
+WorkingDirectory=/home/user/server/hydra
+
+# 启动命令
+ExecStart=/home/user/server/hydra/hydra serve all --config config.yaml
+
+Restart=always
+RestartSec=5s
+
+StandardOutput=journal
+StandardError=journal
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

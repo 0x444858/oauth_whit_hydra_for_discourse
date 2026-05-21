@@ -1,0 +1,1 @@
+./hydra serve all --config config.yaml --dev

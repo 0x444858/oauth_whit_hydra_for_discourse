@@ -1,0 +1,57 @@
+serve:
+  cookies:
+    same_site_mode: Lax
+    names:
+      login_csrf: oauth_login_csrf
+      consent_csrf: oauth_consent_csrf
+      session: oauth_session
+  admin:
+    host: 127.0.0.1
+    port: 4445
+  public:
+    host: 127.0.0.1
+    port: 4444
+
+urls:
+  self:
+    issuer: https://your.domain.com/
+    public: https://your.domain.com/
+    admin: http://127.0.0.1:4445/
+  login: https://your.domain.com/call/login
+  consent: https://your.domain.com/call/consent
+  logout: https://your.domain.com/call/logout
+  error: https://your.domain.com/call/error
+
+webfinger:
+  oidc_discovery:
+    userinfo_url: https://your.domain.com/call/userinfo
+
+secrets:
+  system:
+    - "This_is_your_secret"
+
+dsn: "postgres://hydra:db_password@localhost:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4"
+
+strategies:
+  access_token: jwt
+
+oauth2:
+  expose_internal_errors: false
+  pkce:
+    enforced_for_public_clients: true
+
+log:
+  level: info
+  format: text
+
+oidc:
+  dynamic_client_registration:
+    default_scope:
+      - openid
+
+ttl:
+  access_token: 1h
+  refresh_token: 168h
+  id_token: 1h
+  auth_code: 300s
+  login_consent_request: 10m
