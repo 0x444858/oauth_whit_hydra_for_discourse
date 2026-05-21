@@ -293,3 +293,76 @@ class DbManager:
         """
         result = self._execute_internal('oauth', sql, fetch=True)
         return {row[0]: row[1] for row in result}
+
+    def get_change_logs(self, filters: dict = None, page: int = 1) -> list[dict]:
+        if page < 1:
+            page = 1
+        offset = (page - 1) * self.page_size
+        where_clauses = []
+        params_list = []
+        if filters:
+            if filters.get('target_type', '') != '':
+                where_clauses.append("target_type = %s")
+                params_list.append(int(filters['target_type']))
+            if filters.get('action_code', '') != '':
+                where_clauses.append("action_code = %s")
+                params_list.append(int(filters['action_code']))
+            if filters.get('target_id', ''):
+                where_clauses.append("target_id LIKE %s")
+                params_list.append(f"%{filters['target_id']}%")
+            if filters.get('old_value', ''):
+                where_clauses.append("old_value LIKE %s")
+                params_list.append(f"%{filters['old_value']}%")
+            if filters.get('new_value', ''):
+                where_clauses.append("new_value LIKE %s")
+                params_list.append(f"%{filters['new_value']}%")
+            if filters.get('time_start', ''):
+                where_clauses.append("EXTRACT(EPOCH FROM action_time)::BIGINT >= %s")
+                params_list.append(int(filters['time_start']))
+            if filters.get('time_end', ''):
+                where_clauses.append("EXTRACT(EPOCH FROM action_time)::BIGINT <= %s")
+                params_list.append(int(filters['time_end']))
+            if filters.get('operator_uid', ''):
+                where_clauses.append("operator_uid = %s")
+                params_list.append(int(filters['operator_uid']))
+            if filters.get('operator_username', ''):
+                where_clauses.append("operator_username LIKE %s")
+                params_list.append(f"%{filters['operator_username']}%")
+            if filters.get('reason', ''):
+                where_clauses.append("action_reason LIKE %s")
+                params_list.append(f"%{filters['reason']}%")
+        where_sql = ('WHERE ' + " AND ".join(where_clauses)) if where_clauses else ''
+        sql = f"""
+            SELECT
+                record_id,
+                target_type,
+                target_id,
+                EXTRACT(EPOCH FROM action_time)::BIGINT as action_time_ts,
+                action_code,
+                operator_uid,
+                operator_username,
+                old_value,
+                new_value,
+                action_reason
+            FROM change_log
+            {where_sql}
+            ORDER BY action_time DESC
+            LIMIT %s OFFSET %s
+        """
+        params_list.extend([self.page_size, offset])
+        result = self._execute_internal('oauth', sql, tuple(params_list), fetch=True)
+        return [
+            {
+                "record_id": row[0],
+                "target_type": row[1],
+                "target_id": row[2],
+                "action_time": row[3],
+                "action_code": row[4],
+                "operator_uid": row[5],
+                "operator_username": row[6],
+                "old_value": row[7],
+                "new_value": row[8],
+                "reason": row[9]
+            }
+            for row in result
+        ]

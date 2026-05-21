@@ -742,6 +742,21 @@ def update_app():
             return 'Internal server error', 500
 
 
+@app.route('/call/manage/changeLog')
+def manage_change_log():
+    c_u = get_user_info_current_session(request)
+    if c_u is None or c_u.get('admin') is not True:
+        return '', 404
+    filters = {}
+    for param in ['target_type', 'action_code', 'target_id', 'old_value', 'new_value',
+                   'time_start', 'time_end', 'operator_uid', 'operator_username', 'reason']:
+        val = request.args.get(param)
+        if val is not None and val != '':
+            filters[param] = val
+    page = request.args.get('page', 1, type=int)
+    return jsonify(db.get_change_logs(filters, page))
+
+
 @app.route('/call/<path:path>')
 def file_sender(path):
     PUBLIC_ROUTES = {

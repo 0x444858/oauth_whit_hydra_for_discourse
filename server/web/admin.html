@@ -17,8 +17,8 @@
             <br>
             <div class="overflow-container">
                 <div style="padding: 10px 5px;">
-                    <span class="ib"><button class="c">重新加载数据</button></span>
-                    <span class="ib"><button class="c">清空已有过滤条件</button></span>
+                    <span class="ib"><button class="c" onclick="reloadChangeLog(this)">重新加载数据</button></span>
+                    <span class="ib"><button class="c" onclick="clearChangeLogFilter(this)">清空已有过滤条件</button></span>
                 </div>
                 <br>
                 <table>
@@ -81,7 +81,11 @@
                             <th>操作理由</th>
                         </tr>
                     </thead>
+                    <tbody id="changeLogTableBody"></tbody>
                 </table>
+                <div style="padding: 10px 5px; text-align: center;">
+                    <span class="ib"><button class="c" onclick="loadMoreChangeLog(this)">加载更多</button></span>
+                </div>
             </div>
         </div>
         <div id="settings">
