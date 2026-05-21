@@ -1,0 +1,31 @@
+#uid {
+    width: 100px;
+    margin: 10px;
+}
+
+#uidAlert {
+    display: none;
+    color: red;
+}
+
+#uid:not(:placeholder-shown)~#uidAlert,
+#uid_all:checked~#uidAlert {
+    display: inline-block;
+}
+
+select:has(option[value=""]:checked) {
+    color: gray;
+}
+
+select option {
+    color: black;
+}
+
+.select-item-container {
+    display: flex;
+    min-height: 2em;
+    width: auto;
+    background-color: var(--color-sidebar-bg);
+    border-radius: 5px;
+    padding: 10px;
+}

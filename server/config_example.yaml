@@ -1,0 +1,34 @@
+# discourse在localhost的监听地址
+discourse_url_inner: "http://127.0.0.1:55929"
+
+# discourse的公开url
+discourse_url_outer: "https://your.domain.com"
+
+# hydra的admin api在localhost的监听地址
+hydra_admin_url: "http://127.0.0.1:4445"
+
+# 本服务的监听端口
+listen_port: 4440
+
+# 本服务访问discourse和hydra的超时时间
+timeout: 10
+
+# 以下 scope 被设为敏感 scope，包含这些 scope 的 token 不能同时具有 offline_access，且有效期受限
+sensitive_scopes_list:
+  - email
+
+# 包含敏感 scope 的 token 有效期，单位秒
+sensitive_token_exp: 30
+
+# 有管理员权限的 api key
+discourse_api_key: your_discourse_api_key
+
+# postgresql数据库配置
+db:
+  host: localhost
+  port: 5432
+  user: oauth
+  password: your_password
+  dbname: oauth
+  hydra_dbname: hydra
+  max_conns: 20

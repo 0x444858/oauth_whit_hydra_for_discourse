@@ -1,0 +1,308 @@
+:root {
+    --color-sidebar-bg: #eef1ff;
+    /* 顶部栏 + 菜单背景 */
+    --color-main-bg: #f9fbfd;
+    /* 主内容区背景 */
+    --color-text: #1a1a1a;
+    /* 所有文字统一颜色 */
+    --color-text-light: #999;
+    --color-menu-hover: #d7e0ff;
+    /* 菜单项 hover / active 背景 */
+    --top-bar-height: 60px;
+    --sidebar-width: 200px;
+    --button-bg: #595bca;
+    --button-disabled-bg: #c5cbe9;
+    --button-border-color: #b3b9e2;
+    --button-text-color: #fff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--color-text);
+    background: var(--color-main-bg);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ========== 顶部栏 ========== */
+.top-bar {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--top-bar-height);
+    background: var(--color-sidebar-bg);
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.menu-toggle {
+    background: transparent;
+    border: none;
+    color: var(--color-text);
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: block;
+    /* 始终显示 */
+}
+
+.top-bar .title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.top-bar .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    background: #bdc3c7;
+}
+
+/* ========== 主内容区域 ========== */
+.main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ========== 侧边菜单 ========== */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--color-sidebar-bg);
+    color: var(--color-text);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: transform 0.3s ease;
+    z-index: 10;
+}
+
+.sidebar a {
+    color: var(--color-text);
+    text-decoration: none;
+    padding: 12px 20px;
+    display: block;
+    margin: 0 10px;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+    background: var(--color-menu-hover);
+}
+
+.sidebar a.active {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+    margin-right: 0;
+}
+
+/* ========== 主内容区 ========== */
+.content-area {
+    flex: 1;
+    padding: 24px;
+    background: var(--color-main-bg);
+    overflow-y: auto;
+}
+
+/* ========== 遮罩层（仅移动端） ========== */
+.overlay {
+    display: none;
+    position: fixed;
+    top: var(--top-bar-height);
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - var(--top-bar-height));
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9;
+}
+
+.overlay.active {
+    display: block;
+}
+
+/* ========== 响应式：移动端 ========== */
+@media (max-width: 1210px) {
+    .sidebar {
+        position: fixed;
+        top: var(--top-bar-height);
+        left: calc(-1 * var(--sidebar-width));
+        /* 默认隐藏 */
+        height: calc(100vh - var(--top-bar-height));
+    }
+
+    .sidebar.active {
+        transform: translateX(var(--sidebar-width));
+    }
+}
+
+/* ========== 响应式：桌面端 ========== */
+@media (min-width: 1211px) {
+    .sidebar {
+        transform: translateX(0);
+    }
+
+    .sidebar.collapsed {
+        transform: translateX(calc(-1 * var(--sidebar-width)));
+        margin-right: calc(-1 * var(--sidebar-width));
+    }
+}
+
+/* 内容块样式 */
+.tab-content>div {
+    display: none;
+}
+
+.tab-content>div.active {
+    display: block;
+}
+
+/* 表格样式 */
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+thead tr {
+    position: sticky;
+}
+
+th,
+td {
+    border: 1px solid var(--color-text-light);
+    padding: 8px 12px;
+    text-align: center;
+    color: var(--color-text);
+}
+
+tr:hover:not(.disabled) td {
+    background-color: #f0f0f0;
+}
+
+tr.disabled td {
+    background-color: #cccccc;
+}
+
+table.nb td,
+table.nb th {
+    border: none;
+}
+
+/* 按钮样式 */
+button.c {
+    background: var(--button-bg);
+    color: var(--button-text-color);
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+}
+
+button.c:hover:not([disabled]) {
+    outline: 3px solid var(--button-border-color);
+}
+
+button.c[disabled] {
+    background: var(--button-disabled-bg);
+}
+
+/* 折叠区 */
+details {
+    background: var(--color-sidebar-bg);
+    border: 1px solid var(--color-text-light);
+    margin: 8px 0;
+    padding: 8px;
+    border-radius: 10px;
+}
+
+/* 输入区域 */
+input[type="text"],
+input[type="number"],
+input[type="datetime-local"],
+select,
+option,
+textarea {
+    font-size: 1em;
+    border: none;
+    padding: 8px;
+    background-color: transparent;
+    outline: none;
+}
+
+textarea {
+    font-size: 1.1em;
+    border: none;
+    padding: 8px;
+    background-color: transparent;
+    outline: none;
+    resize: none;
+    height: 200px;
+}
+
+.required-mark::before {
+    content: "*";
+    color: #ff4d4f;
+    margin-right: 4px;
+    font-weight: bold;
+}
+
+/* 通用 */
+.hidden {
+    display: none;
+}
+
+.flex-container {
+    display: flex;
+}
+
+.flex-item {
+    flex: 1;
+}
+
+.w200 {
+    width: 200px;
+}
+
+.w100p {
+    width: 100%;
+}
+
+.ib {
+    display: inline-block;
+}
+
+.overflow-container {
+    width: 100%;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+
+#ownerChangeAlert {
+    display: none;
+    color: red;
+}
+
+#newApp_owner:not(:placeholder-shown)~#ownerChangeAlert {
+    display: inline-block;
+}
+
+.tl {
+    text-align: left;
+}
+
+.cr {
+    color: red;
+}

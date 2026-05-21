@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>错误</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 20px;
+      color: #1f2937;
+    }
+    .container {
+      max-width: 600px;
+      margin: 80px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 32px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 16px;
+      color: #dc2626;
+    }
+    .error-code {
+      font-family: monospace;
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin: 12px 0;
+      display: inline-block;
+    }
+    .error-desc {
+      color: #6b7280;
+      margin: 16px 0;
+      line-height: 1.5;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 24px;
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>错误</h1>
+    <div id="error-code" class="error-code">—</div>
+    <div id="error-desc" class="error-desc">—</div>
+  </div>
+  <script>
+    function getUrlParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+    const error = getUrlParam('error') || 'unknown_error';
+    const errorDesc = getUrlParam('error_description') || '未提供详细信息';
+
+    document.getElementById('error-code').textContent = error;
+    document.getElementById('error-desc').textContent = errorDesc;
+  </script>
+</body>
+</html>

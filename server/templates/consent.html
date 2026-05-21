@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>授权请求</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 20px;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 32px;
+        }
+        h1 {
+            font-size: 24px;
+            margin: 0 0 24px;
+            color: #111827;
+            text-align: center;
+        }
+        .client-info {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        .client-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 8px 0 4px;
+        }
+        .client-id {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+        .provider {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .provider a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .provider a:hover {
+            text-decoration: underline;
+        }
+        .scopes {
+            margin: 24px 0;
+        }
+        .scope-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 12px 0;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        .scope-checkbox-container {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            margin-top: 2px;
+        }
+        .scope-checkbox {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 22px;
+            width: 22px;
+            background-color: #fff;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .scope-checkbox:checked ~ .checkmark {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .scope-checkbox:checked ~ .checkmark:after {
+            display: block;
+        }
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 7px;
+            top: 2px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .scope-checkbox:not(:disabled):hover ~ .checkmark {
+            border-color: #9ca3af;
+        }
+        .scope-checkbox:disabled ~ .checkmark {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .scope-content {
+            flex: 1;
+        }
+        .scope-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .scope-desc {
+            color: #4b5563;
+            font-size: 14px;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .btn-allow {
+            background: #3b82f6;
+            color: white;
+            flex: 1;
+        }
+        .btn-deny {
+            background: #e5e7eb;
+            color: #1f2937;
+            flex: 1;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        #scope-warning {
+            color: #991b1b;
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .scope-item.child-scope {
+            padding-left: 48px;
+            background-color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        .scope-item.child-scope .scope-title {
+            font-weight: 500;
+            font-size: 14px;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>授权请求</h1>
+
+    <div class="client-info">
+        <div class="client-name" id="client-name">—</div>
+        <div class="client-id" id="client-id">—</div>
+        <div class="provider" id="provider">—</div>
+    </div>
+
+    <div class="scopes">
+        <h2>客户端请求以下权限</h2>
+        <span>您可以手动取消部分权限，这可能会限制客户端的功能</span>
+        <div id="scopes-list"></div>
+    </div>
+
+    <div id="scope-warning"></div>
+
+    <div class="actions">
+        <button id="deny-btn" class="btn-deny">拒绝</button>
+        <button id="allow-btn" class="btn-allow">允许</button>
+    </div>
+</div>
+
+<script nonce="{{ nonce }}">
+    const consentInfo = {{ consent_info | safe }};
+    const USER_PAGE_URL_PREFIX = "{{ user_page_url_prefix }}";
+    const SENSITIVE_SCOPES_LIST = {{sensitive_scopes_list | safe}};
+</script>
+
+<script nonce="{{ nonce }}">
+    // ===========配置开始==============
+    const SCOPE_CONFIG = {
+        'openid': {
+            desc: '验证您的身份，获得您的UID',
+            required: true
+        },
+        'profile': {
+            desc: '访问您的公开用户资料（UID 用户名 别名 是否封禁 头像 头衔 信任级别 是否是管理员 是否是版主 群组）',
+            children: [
+                {scope: 'active', desc: '查看您的活跃状态（账号创建时间 访问天数 被举报数 上次活动时间 ' +
+                    '点赞数 被点赞数 发帖数 主题数 阅读的贴子数 阅读的主题数 阅读总秒数）'}
+            ]
+        },
+        'email_domain': {
+            desc: '获取您的邮箱域名，可能被用于推测您的学校/单位',
+            bg: '#fef3c7',
+            children: [
+                { scope: 'email', desc: '获取您的完整邮箱地址，请仔细考虑是否授权', bg: '#fecaca' }
+            ]
+        },
+        'offline_access': {
+            desc: '保持登录状态（允许刷新令牌）',
+            bg: '#fef3c7'
+        }
+    };
+    // ===========配置结束==============
+</script>
+
+<script nonce="{{ nonce }}">
+    const SCOPE_MAP = {};
+    const PARENT_MAP = {};
+    for (const [parentScope, config] of Object.entries(SCOPE_CONFIG)) {
+        SCOPE_MAP[parentScope] = { ...config, scope: parentScope, isParent: true };
+        if (config.children) {
+            config.children.forEach(child => {
+                const fullConfig = { ...child, isParent: false, parent: parentScope };
+                SCOPE_MAP[child.scope] = fullConfig;
+                PARENT_MAP[child.scope] = parentScope;
+            });
+        }
+    }
+
+    function checkScopeLogic() {
+        const warningEl = document.getElementById('scope-warning');
+        const checkboxes = document.querySelectorAll('.scope-checkbox');
+        let offlineAccessCb = null;
+        const selectedSensitive = [];
+        checkboxes.forEach(cb => {
+            const scope = cb.dataset.scope;
+            if (!scope) return;
+            const config = SCOPE_MAP[scope];
+            const parentScope = config?.parent;
+            if (scope === 'offline_access') {
+                offlineAccessCb = cb;
+            }
+            if (parentScope) {
+                const parentCb = document.querySelector(`.scope-checkbox[data-scope="${parentScope}"]`);
+                if (parentCb) {
+                    if (!parentCb.checked) {
+                        cb.checked = false;
+                        cb.disabled = true;
+                        cb.dataset.disabledByParent = "true";
+                    } else {
+                        cb.disabled = false;
+                        delete cb.dataset.disabledByParent;
+                    }
+                }
+            }
+            if (cb.checked && SENSITIVE_SCOPES_LIST.includes(scope)) {
+                selectedSensitive.push(scope);
+            }
+        });
+        let conflictMsg = '';
+        let hasConflict = false;
+        if (selectedSensitive.length > 0 && offlineAccessCb) {
+            hasConflict = true;
+            offlineAccessCb.checked = false;
+            offlineAccessCb.disabled = true;
+            offlineAccessCb.dataset.disabledByConflict = "true";
+            const displayNames = selectedSensitive.map(s => {
+                const cfg = SCOPE_MAP[s];
+                return cfg ? (cfg.scope.replace(/[:_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())) : s;
+            });
+            conflictMsg = `
+                您选择的 <span style="font-weight:bold;">${displayNames.join(', ')}</span> 属于敏感权限，无法与 <code>offline_access</code> 同时批准。<br>
+                <span style="opacity: 0.8; font-size: 12px;">(offline_access 已自动取消并禁用)</span>
+            `;
+        } else {
+            if (offlineAccessCb && offlineAccessCb.dataset.disabledByConflict) {
+                offlineAccessCb.disabled = false;
+                delete offlineAccessCb.dataset.disabledByConflict;
+            }
+            conflictMsg = '';
+        }
+        if (warningEl) {
+            if (hasConflict) {
+                warningEl.innerHTML = conflictMsg;
+                warningEl.style.display = 'block';
+            } else {
+                warningEl.innerHTML = '';
+                warningEl.style.display = 'none';
+            }
+        }
+    }
+
+    function initScopeListeners() {
+        const allCheckboxes = document.querySelectorAll('.scope-checkbox');
+        allCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                const scope = cb.dataset.scope;
+                const config = SCOPE_MAP[scope];
+                if (config?.required && !cb.checked) {
+                    cb.checked = true;
+                    return;
+                }
+                checkScopeLogic();
+            });
+        });
+        checkScopeLogic();
+    }
+
+    document.getElementById('client-name').textContent = consentInfo.client_name || '未知应用';
+    document.getElementById('client-id').textContent = consentInfo.client_id
+        ? `Client ID: ${consentInfo.client_id}` : '';
+    const providerEl = document.getElementById('provider');
+    const provider = consentInfo.client_provider;
+    if (provider?.name && USER_PAGE_URL_PREFIX) {
+        const prefix = USER_PAGE_URL_PREFIX.endsWith('/')
+          ? USER_PAGE_URL_PREFIX : USER_PAGE_URL_PREFIX + '/';
+        const username = encodeURIComponent(provider.name);
+        const uid = provider.uid != null ? provider.uid : 'unknown';
+        const url = prefix + username;
+        providerEl.innerHTML = `由 <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(provider.name)}</a> 提供 (UID: ${escapeHtml(String(uid))})`;
+    } else {
+        providerEl.textContent = '由未知开发者提供';
+    }
+    const scopesList = document.getElementById('scopes-list');
+    const requestedScopes = consentInfo.requested_scopes || [];
+    if (requestedScopes.length === 0) {
+        scopesList.innerHTML = '<div class="scope-item">未请求任何权限</div>';
+    } else {
+        const requestedScopesSet = new Set(requestedScopes || []);
+        function renderScopeTree(parentScopeKey, config, isRoot = true) {
+            const isRequested = requestedScopesSet.has(parentScopeKey);
+            if (!isRoot && !isRequested) {
+                return;
+            }
+            if (isRoot && !isRequested) {
+                const hasAnyChildRequested = config.children?.some(child => requestedScopesSet.has(child.scope));
+                if (!hasAnyChildRequested) {
+                    return;
+                }
+                return;
+            }
+            if (isRequested || (config.children && config.children.some(c => requestedScopesSet.has(c.scope)))) {
+                 if (!isRequested) {
+                     return;
+                 }
+                 renderScopeItem(parentScopeKey, config, isRoot);
+            }
+            if (config.children) {
+                config.children.forEach(childConfig => {
+                    if (requestedScopesSet.has(childConfig.scope)) {
+                        renderScopeItem(childConfig.scope, childConfig, false);
+                    }
+                });
+            }
+        }
+        function renderScopeItem(scope, config, isParent) {
+            const bgColor = config.bg || (isParent ? '#f3f4f6' : '#ffffff');
+            const div = document.createElement('div');
+            div.className = `scope-item ${!isParent ? 'child-scope' : ''}`;
+            div.style.backgroundColor = bgColor;
+            const checkboxId = `scope-${scope.replace(/[^a-z0-9]/gi, '-')}`;
+            const isRequired = !!config.required;
+            const defaultChecked = true;
+            const isDisabled = isRequired;
+            div.innerHTML = `
+              <label class="scope-checkbox-container">
+                  <input type="checkbox" class="scope-checkbox" id="${checkboxId}" data-scope="${escapeHtml(scope)}"
+                    ${defaultChecked ? 'checked' : ''}
+                    ${isDisabled ? 'disabled' : ''}>
+                  <span class="checkmark"></span>
+              </label>
+              <div class="scope-content">
+                  <div class="scope-title">${escapeHtml(scope)}</div>
+                  <div class="scope-desc">${escapeHtml(config.desc)}</div>
+              </div>`;
+            scopesList.appendChild(div);
+        }
+        Object.keys(SCOPE_CONFIG).forEach(key => {
+            renderScopeTree(key, SCOPE_CONFIG[key], true);
+        });
+        initScopeListeners();
+    }
+
+    function escapeHtml(str) {
+        if (typeof str !== 'string') return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function getGrantedScopes() {
+        const granted = [];
+        document.querySelectorAll('.scope-checkbox').forEach(cb => {
+            if (cb.disabled || cb.checked) {
+              granted.push(cb.dataset.scope);
+            }
+        });
+        return granted;
+    }
+
+    document.getElementById('allow-btn').addEventListener('click', () => submitConsent(true));
+    document.getElementById('deny-btn').addEventListener('click', () => submitConsent(false));
+
+    async function submitConsent(accept) {
+        const btn = document.getElementById(accept ? 'allow-btn' : 'deny-btn');
+        btn.classList.add('loading');
+        btn.textContent = '处理中...';
+        try {
+            const url = accept ? '/call/consent/accept' : '/call/consent/reject';
+            const payload = { challenge: consentInfo.challenge };
+            if (accept) {
+                payload.grant_scopes = getGrantedScopes();
+            }
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error('操作失败');
+            const data = await response.json();
+            if (data.redirect_to) {
+                window.location.href = data.redirect_to;
+            } else {
+                alert('操作完成');
+            }
+        } catch (err) {
+            alert('请求失败，请重试');
+            btn.classList.remove('loading');
+            btn.textContent = accept ? '允许' : '拒绝';
+        }
+    }
+</script>
+</body>
+</html>

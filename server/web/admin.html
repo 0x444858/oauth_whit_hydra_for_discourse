@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>OAuth管理</title>
+</head>
+
+<body>
+    <div id="newSidebars">
+        <a href="#" data-tab="changeLog">操作日志</a>
+        <a href="#" data-tab="settings">设置</a>
+    </div>
+    <div id="newTabs">
+        <div id="changeLog">
+            <h2>操作日志</h2>
+            <br>
+            <div class="overflow-container">
+                <div style="padding: 10px 5px;">
+                    <span class="ib"><button class="c">重新加载数据</button></span>
+                    <span class="ib"><button class="c">清空已有过滤条件</button></span>
+                </div>
+                <br>
+                <table>
+                    <thead>
+                        <tr>
+                            <td><select id="action_log_type">
+                                    <option value="" selected>全部</option>
+                                    <option value="0">未知</option>
+                                    <option value="1">客户端</option>
+                                    <option value="2">系统设置</option>
+                                </select></td>
+                            <td><select id="action_log_action">
+                                    <option value="">全部</option>
+                                    <option value="0">未知</option>
+                                    <optgroup label="-- 客户端 --">
+                                        <option value="1">创建客户端</option>
+                                        <option value="2">删除客户端</option>
+                                        <option value="10">变更客户端所有者</option>
+                                        <option value="11">更改客户端名称</option>
+                                        <option value="12">更改客户端回调地址</option>
+                                        <option value="13">更改客户端权限范围</option>
+                                        <option value="14">重置客户端密钥</option>
+                                    </optgroup>
+                                    <optgroup label="-- 系统设置 --">
+                                        <option value="30">更改系统设置</option>
+                                    </optgroup>
+                                </select></td>
+                            <td><input type="text" spellcheck="false" class="w100p" placeholder="过滤"
+                                    id="action_log_target_id"></td>
+                            <td><input type="text" spellcheck="false" class="w100p" placeholder="过滤"
+                                    id="action_log_old_value"></td>
+                            <td><input type="text" spellcheck="false" class="w100p" placeholder="过滤"
+                                    id="action_log_new_value"></td>
+                            <td>
+                                <span class="ib">
+                                    <label for="action_log_time_start">从</label>
+                                    <input type="datetime-local" id="action_log_time_start"></span>
+                                <br>
+                                <span class="ib">
+                                    <label for="action_log_time_end">到</label>
+                                    <input type="datetime-local" id="action_log_time_end"></input>
+                                </span>
+                            </td>
+                            <td><input type="number" spellcheck="false" class="w100p" placeholder="过滤"
+                                    id="action_log_operator_uid"></td>
+                            <td><input type="text" spellcheck="false" class="w100p" placeholder="过滤"
+                                    id="action_log_operator_username"></td>
+                            <td><input type="text" spellcheck="false" class="w100p" placeholder="过滤"
+                                    id="action_log_reason"></td>
+                        </tr>
+                        <tr>
+                            <th>操作类型</th>
+                            <th>操作行为</th>
+                            <th>对象ID</th>
+                            <th>旧值</th>
+                            <th>新值</th>
+                            <th>操作时间</th>
+                            <th>操作人UID</th>
+                            <th>操作人用户名</th>
+                            <th>操作理由</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div id="settings">
+            <h2>设置</h2>
+            <table class="nb">
+                <tr>
+                    <td class="w200"><label for="allow_new_client_apply">允许申请新客户端</label></td>
+                    <td class="tl"><input type="checkbox" id="allow_new_client_apply">
+                        <label for="allow_new_client_apply">启用</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="w200"><label>允许注册客户端的群组</label>
+                        <p class="cr">该功能暂未实现</p>
+                    </td>
+                    <td>
+                        <div class="tl">
+                            <p>已选择的群组</p>
+                            <div id="new_apply_allowed_group_ids_selected" class="select-item-container">无</div>
+                        </div>
+                        <div class="tl">
+                            <p>可选群组</p>
+                            <div id="new_apply_allowed_group_ids_available" class="select-item-container">无</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="w200"><label for="uid_blacklist">不允许注册客户端的用户</label>
+                        <p class="cr">该功能暂未实现</p>
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="uidInputArea">
+        <label for="uid">指定UID: </label>
+        <input type="number" id="uid" name="uid" placeholder="UID">
+        <input type="checkbox" id="uid_all">
+        <label for="uid_all">所有人</label>
+        <p id="uidAlert">您正在使用指定uid功能</p>
+    </div>
+</body>
+
+</html>

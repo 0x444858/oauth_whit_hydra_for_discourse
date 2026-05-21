@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我的OAuth</title>
+    <link rel="stylesheet" href="css/manage.css">
+</head>
+
+<body>
+    <!-- 顶部栏 -->
+    <div class="top-bar">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <div class="title" id="title">我的OAuth</div>
+        <div id="avatar" class="avatar"></div>
+    </div>
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 侧边菜单 -->
+        <nav class="sidebar" id="sidebar">
+            <a href="#" data-tab="authManagement" class="active">授权管理</a>
+            <a href="#" data-tab="appLogs">访问日志</a>
+            <a href="#" data-tab="myApp">我的应用</a>
+            <p style="display: none;" id="sidebarLinkSep"></p>
+            <a href="doc">开发者文档</a>
+        </nav>
+        <!-- 遮罩（仅移动端有效） -->
+        <div class="overlay" id="overlay"></div>
+        <!-- 内容区域 -->
+        <main class="content-area" id="contentArea">
+            <div class="tab-content" id="tabContent">
+                <div id="authManagement" class="active">
+                    <h2>持有您有效令牌的应用</h2>
+                    <p>以下应用持有您有效访问令牌，包括访问令牌和刷新令牌。</p>
+                    <p>当存在刷新令牌时显示刷新令牌的信息，否则显示访问令牌信息。</p>
+                    <br>
+                    <div class="overflow-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" title="应用的唯一标识符">应用ID</th>
+                                    <th rowspan="2">应用名称</th>
+                                    <th rowspan="2">令牌及过期时间<br><small>（以你的时区显示）</small></th>
+                                    <th colspan="6" title="每个权限的详细信息参见 开发者文档 - 权限">权限</th>
+                                    <th>操作</th>
+                                </tr>
+                                <tr id="authManagementScopeRow">
+                                    <th title="获取您的UID" data-type="scope">openid</th>
+                                    <th title="获取您的基本资料，例如用户名、头像等" data-type="scope">profile</th>
+                                    <th title="获取您的活动信息，例如发帖数、登录天数等" data-type="scope">active</th>
+                                    <th title="获取您的邮箱域名" data-type="scope">email_domain</th>
+                                    <th title="获取您的完整邮箱地址" data-type="scope">email</th>
+                                    <th title="长期访问" data-type="scope">offline_access</th>
+                                    <th>
+                                        <button class="c" onclick="revoke_all(this)">全部撤销</button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="authManagementTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="content-area" style="text-align:center">
+                        <button class="c" onclick="loadMoreAuthData(this)">加载更多</button>
+                    </div>
+                </div>
+                <div id="appLogs">
+                    <h2>访问日志</h2>
+                    <p>这里记录了应用对您的账户的最近访问记录。</p>
+                    <br>
+                    <div class="overflow-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" title="应用的唯一标识符">应用ID</th>
+                                    <th rowspan="2">应用名称</th>
+                                    <th rowspan="2">作用对象</th>
+                                    <th rowspan="2">访问时间<br><small>（以你的时区显示）</small></th>
+                                    <th colspan="4" title="每个项目的详细信息参见 开发者文档 - 权限">访问项目</th>
+                                </tr>
+                                <tr id="appLogsScopeRow">
+                                    <th title="获取您的基本资料，例如用户名、头像等" data-type="scope">profile</th>
+                                    <th title="获取您的活动信息，例如发帖数、登录天数等" data-type="scope">active</th>
+                                    <th title="获取您的邮箱域名" data-type="scope">email_domain</th>
+                                    <th title="获取您的完整邮箱地址" data-type="scope">email</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appLogsTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="content-area" style="text-align:center">
+                        <button class="c" onclick="loadMoreAppLog(this)">加载更多</button>
+                    </div>
+                </div>
+                <div id="myApp">
+                    <h2>我的应用</h2>
+                    <p>由您申请的接入本站OAuth系统的应用。</p>
+                    <br>
+                    <button class="c" onclick="toggleNewAppTab()">新应用申请</button>
+                    <br>
+                    <br>
+                    <div class="overflow-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" title="应用的唯一标识符">应用ID</th>
+                                    <th rowspan="2">应用名称</th>
+                                    <th rowspan="2">应用所有者</th>
+                                    <th rowspan="2">创建时间 & 更新时间<br><small>（以你的时区显示）</small></th>
+                                    <th rowspan="2">回调地址</th>
+                                    <th colspan="6" title="每个项目的详细信息参见 开发者文档 - 权限">权限</th>
+                                    <th rowspan="2">操作</th>
+                                </tr>
+                                <tr id="myAppScopeRow">
+                                    <th data-type="scope">openid</th>
+                                    <th data-type="scope">profile</th>
+                                    <th data-type="scope">active</th>
+                                    <th data-type="scope">email_domain</th>
+                                    <th data-type="scope">email</th>
+                                    <th data-type="scope">offline_access</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myAppTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="content-area" style="text-align:center;background-color:transparent">
+                        <button class="c" onclick="loadMoreMyApps(this)">加载更多</button>
+                    </div>
+                </div>
+                <div id="newApp">
+                    <h2 id="newAppPageTitle">新应用申请</h2>
+                    <br>
+                    <p><a onclick="toggleNewAppTab()" href="#"
+                            style="color: rgba(0, 0, 255, 0.5);font-size: 1.3em;text-decoration: none;">⬅ 我的应用</a></p>
+                    <!--p>带<span class="required-mark"></span> 表示必填项</p-->
+                    <p>温馨提示：本地测试阶段可直接使用<a href="doc#test_clients">测试客户端</a>。</p>
+                    <br>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th class="w200"><label for="newApp_client_id" title="应用的唯一标识符"
+                                        class="required-mark">应用ID</label>
+                                    <span class="cr" title="仅允许 小写字母、数字、连字符 和 下划线">!</span>
+                                </th>
+                                <td><span class="flex-container">
+                                        <input type="text" id="newApp_client_id" name="newApp_client_id"
+                                            spellcheck="false" placeholder="local_test" class="flex-item">
+                                    </span></td>
+                            </tr>
+                            <tr>
+                                <th class="w200"><label for="newApp_client_name" title="应用显示的名称"
+                                        class="required-mark">应用名称</label></th>
+                                <td><span class="flex-container">
+                                        <input type="text" id="newApp_client_name" name="newApp_client_name"
+                                            spellcheck="false" placeholder="本地测试客户端" class="flex-item">
+                                    </span></td>
+                            </tr>
+                            <tr>
+                                <th class="w200"><label title="应用回调地址&#10;可填写多个" class="required-mark">回调地址列表</label>
+                                    <br><br>
+                                    <button class="c" onclick="addRedirectUri()">添加</button>
+                                    <button class="c" onclick="resetRedirectUris()">重置</button>
+                                </th>
+                                <td>
+                                    <div id="newApp_redirect_uris_list">
+                                        <span class="flex-container">
+                                            <input type="text" name="newApp_redirect_uris" spellcheck="false"
+                                                placeholder="https://example.com/callback" class="flex-item">
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        
+                            <tr>
+                                <th class="w200"><label title="应用请求的权限范围&#10;空格分隔，具体请点击右边问号查看文档" class="required-mark"
+                                        for="newApp_scope">权限范围</label>
+                                    <a href="doc#scope" style="color:gray;text-decoration:none" target="_blank">?</a>
+                                </th>
+                                <td><span class="flex-container">
+                                        <input type="text" id="newApp_scope" name="newApp_scope" spellcheck="false"
+                                            placeholder="openid profile" class="flex-item">
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr id="clientSecretRow" style="display: none;">
+                                <th class="w200"><label for="newApp_secret">应用密钥</label></th>
+                                <td style="text-align: left;"><input type="checkbox" id="newApp_secret">
+                                    <label for="newApp_secret">重置为新密钥</label>
+                                </td>
+                            </tr>
+                            <tr id="clientOwnerRow" style="display: none;">
+                                <th class="w200"><label for="newApp_owner">应用所有者UID</label></th>
+                                <td><span class="flex-container">
+                                        <input type="number" id="newApp_owner" name="newApp_owner" spellcheck="false"
+                                            placeholder="UID" class="flex-item">
+                                        <br>
+                                        <span id="ownerChangeAlert">这将尝试变更应用的所有者</span>
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="content-area" style="text-align:center">
+                        <p id="newApp_error_message" style="white-space: pre-line" class="cr"></p>
+                        <br>
+                        <button class="c" onclick="applyNewApp(this)">提交</button>
+                        <button class="c" onclick="resetApplyNewApp()">清空</button>
+                    </div>
+                    <div id="newAppSuccessMsg"
+                        style="text-align: center; background-color: var(--color-sidebar-bg); padding: 10px; display: none;">
+                        <h3 style="color:green;">成功！</h3>
+                        <p>应用ID：<span></span></p>
+                        <p>应用名称：<span></span></p>
+                        <p>回调地址：<span></span></p>
+                        <p>权限范围：<span></span></p>
+                        <p>应用密钥：<span></span></p>
+                        <p>所有者UID：<span></span></p>
+                        <p class="cr">请妥善保管密钥，遗失无法再次显示，只能重置为新密钥</p>
+                        <br>
+                        <button onclick="document.getElementById('newAppSuccessMsg').style.display='none'"
+                            class="c">我已知晓，关闭提示</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        /* 模板JS */
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const menuLinks = sidebar.querySelectorAll('a');
+        function toggleSidebar() {
+            const isMobile = window.innerWidth <= 1210;
+            if (isMobile) {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+            }
+        }
+        // 切换标签页
+        function switchTab(tabId) {
+            const menuLinks = sidebar.querySelectorAll('a');
+            const tabContents = document.querySelectorAll('.tab-content > div');
+            // 更新菜单激活状态
+            menuLinks.forEach(link => {
+                if (link.dataset.tab === tabId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+            // 显示对应内容
+            tabContents.forEach(content => {
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+        // 事件绑定
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+        function handleMenuClick(e) {
+            const link = e.currentTarget;
+            const tabId = link.dataset.tab;
+            e.preventDefault();
+            switchTab(tabId);
+            if (window.innerWidth <= 1210) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        }
+        menuLinks.forEach(link => {
+            if (link.dataset.tab) {
+                link.addEventListener('click', handleMenuClick);
+            } else {
+                link.target = '_blank';
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && window.innerWidth <= 1210) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        });
+
+        function toggleNewAppTab() {
+            const myAppTab = document.getElementById('myApp');
+            const newAppTab = document.getElementById('newApp');
+            if (myAppTab.classList.contains('active')) {
+                myAppTab.classList.remove('active');
+                newAppTab.classList.add('active');
+            } else {
+                myAppTab.classList.add('active');
+                newAppTab.classList.remove('active');
+            }
+        }
+
+        // 获取当前用户信息
+        (function () {
+            return; // dev only
+            fetch('/session/current.json')
+                .then(response => {
+                    if (!response.ok) {
+                        window.location.href = '/login';
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    if (data.current_user) {
+                        window.current_user = data.current_user;
+                        const avatarDiv = document.getElementById('avatar');
+                        if (avatarDiv && data.current_user.avatar_template && data.current_user.username) {
+                            const avatarUrl = data.current_user.avatar_template.replace('{size}', '96');
+                            avatarDiv.style.backgroundImage = `url('${avatarUrl}')`;
+                            avatarDiv.style.backgroundSize = 'cover';
+                            avatarDiv.title = data.current_user.username;
+                        }
+                        if (data.current_user.admin) {
+                            if (location.pathname.endsWith('/admin')) {
+                                const s = document.createElement('script');
+                                s.src = 'js/admin.js';
+                                s.async = false;
+                                document.body.appendChild(s);
+                            } else {
+                                const admin_a = document.createElement('a');
+                                admin_a.href = 'admin';
+                                admin_a.textContent = '管理员模式';
+                                admin_a.target = '_blank';
+                                sidebar.appendChild(admin_a);
+                            }
+                        }
+                    } else {
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(error => {
+                    console.error('Session request failed:', error);
+                    window.location.href = '/login';
+                });
+        })();
+        function getExtraParams() {
+            return {};
+        }
+        window.client_data = {};
+        newAppPageMode = 'new';
+    </script>
+    <script src="js/manage.js"></script>
+    <script src="js/admin.js"></script> <!-- dev only-->
+</body>
+
+</html>
