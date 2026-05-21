@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          background: #f9fafb;
+          margin: 0;
+          padding: 20px;
+          color: #1f2937;
+        }
+        .container {
+          max-width: 600px;
+          margin: 80px auto;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+          padding: 32px;
+          text-align: center;
+        }
+        h1 {
+          font-size: 24px;
+          margin: 0 0 16px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>测试OAuth</h1>
+    <div>
+        <span>输入要申请的scope</span>
+        <br>
+        <input id="scope" type="text" value="openid profile offline_access email" style="width:300px">
+    </div>
+    <br>
+    <button id="btn" onclick="start()">开始测试</button>
+    <script>
+        function getRandomString() {
+            return Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
+        }
+        const state = getRandomString();
+        function start() {
+            let scope = document.getElementById('scope').value;
+            let link = 'https://{{ domain }}/oauth2/auth?'
+                + 'response_type=code&'
+                + 'client_id=local_test&'
+                + 'redirect_uri=http%3A%2F%2F127.0.0.1%3A48484%2Foauth_callback&'
+                + 'scope=' + encodeURIComponent(scope) + '&'
+                + 'state=' + state;
+            window.open(link, '_blank');
+        }
+    </script>
+</div>
+</body>
+</html>
