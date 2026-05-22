@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CONFIG_FILE="$SCRIPT_DIR/server/config.yaml"
+CONFIG_FILE="$SCRIPT_DIR/config.yaml"
 
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "错误: 找不到 $CONFIG_FILE"
