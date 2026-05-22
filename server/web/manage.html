@@ -304,7 +304,6 @@
 
         // 获取当前用户信息
         (function () {
-            return; // dev only
             fetch('/session/current.json')
                 .then(response => {
                     if (!response.ok) {
@@ -354,7 +353,6 @@
         newAppPageMode = 'new';
     </script>
     <script src="js/manage.js"></script>
-    <script src="js/admin.js"></script> <!-- dev only-->
 </body>
 
 </html>

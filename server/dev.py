@@ -14,6 +14,9 @@ def g_json():
         data['groups'] = []
     return data
 
+@app.route('/session/current.json')
+def session_current():
+    return send_file('temp/current_session.json')
 
 @app.route('/call/admin/settings')
 def admin_settings():
