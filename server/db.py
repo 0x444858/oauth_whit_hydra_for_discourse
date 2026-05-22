@@ -113,7 +113,7 @@ class DbManager:
                 reason              TEXT
             );
             CREATE TABLE IF NOT EXISTS sys_config (
-                key                 PRIMARY KEY,
+                key                 TEXT PRIMARY KEY,
                 value               TEXT
             );
         """
@@ -123,6 +123,12 @@ class DbManager:
         """
         self._execute_internal('oauth', create_table_sql)
         self._execute_internal('oauth', create_index_sql)
+        for key, value in DEFAULT_SYSTEM_CONFIGS.items():
+            self._execute_internal(
+                'oauth',
+                'INSERT INTO sys_config (key, value) VALUES (%s, %s) ON CONFLICT DO NOTHING',
+                (key, value)
+            )
 
     def close_all(self):
         if self._pool_oauth:
@@ -286,6 +292,13 @@ class DbManager:
         self._execute_internal('oauth', sql,
                                (target_type_code, target_id, action_code, uid, username, action_reason, old_value,
                                 new_value))
+
+    def set_sys_config(self, key: str, value: str) -> None:
+        sql = """
+            INSERT INTO sys_config (key, value) VALUES (%s, %s)
+            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        """
+        self._execute_internal('oauth', sql, (key, value))
 
     def get_sys_config(self) -> dict:
         sql = """

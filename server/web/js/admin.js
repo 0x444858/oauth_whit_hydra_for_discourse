@@ -42,6 +42,7 @@ function setAdminParts(doc) {
     if (uid_input_area && content_area) {
         content_area.insertBefore(uid_input_area, content_area.firstChild);
     }
+    initSettings();
 }
 
 function getExtraParams() {
@@ -168,4 +169,25 @@ function clearChangeLogFilter() {
         'action_log_operator_uid', 'action_log_operator_username', 'action_log_reason']
         .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     reloadChangeLog();
+}
+
+function initSettings() {
+    fetch('/call/admin/settings')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(configs => {
+            const cb = document.getElementById('allow_new_client_apply');
+            if (cb) cb.checked = configs.allow_new_client_apply === 't';
+        })
+        .catch(e => console.error('加载系统设置失败:', e));
+
+    document.getElementById('allow_new_client_apply')?.addEventListener('change', function () {
+        const value = this.checked ? 't' : 'f';
+        fetch('/call/admin/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'allow_new_client_apply', value: value })
+        })
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); })
+            .catch(e => { alert('保存设置失败：' + e.message); this.checked = !this.checked; });
+    });
 }
