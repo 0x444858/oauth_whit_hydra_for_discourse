@@ -136,6 +136,7 @@ function reloadChangeLog(button) {
         if (button) { button.disabled = false; button.textContent = '重新加载数据'; }
     }).catch(e => {
         console.error('加载操作日志失败:', e);
+        alert('加载操作日志失败：' + e.message);
         if (button) { button.disabled = false; button.textContent = '重新加载数据'; }
     });
 }
@@ -155,6 +156,7 @@ function loadMoreChangeLog(button) {
         }
     }).catch(e => {
         console.error('加载操作日志失败:', e);
+        alert('加载操作日志失败：' + e.message);
         if (button) { button.disabled = false; button.textContent = '加载更多'; }
     });
 }
