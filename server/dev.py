@@ -1,6 +1,6 @@
 import json
 from flask import Flask, send_file, request
-from config import load_config
+from config_option import load_config
 
 app = Flask(__name__, template_folder='templates')
 

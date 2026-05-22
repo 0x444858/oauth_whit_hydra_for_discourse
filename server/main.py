@@ -1,5 +1,5 @@
 from flask import Flask
-from config import load_config
+from config_option import load_config
 from db import DbManager
 
 
