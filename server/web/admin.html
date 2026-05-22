@@ -17,8 +17,8 @@
             <br>
             <div class="overflow-container">
                 <div style="padding: 10px 5px;">
-                    <span class="ib"><button class="c" onclick="reloadChangeLog(this)">重新加载数据</button></span>
-                    <span class="ib"><button class="c" onclick="clearChangeLogFilter(this)">清空已有过滤条件</button></span>
+                    <button class="c ib" onclick="reloadChangeLog(this)">重新加载数据</button>
+                    <button class="c ib" onclick="clearChangeLogFilter(this)">清空已有过滤条件</button>
                 </div>
                 <br>
                 <table>
@@ -84,7 +84,7 @@
                     <tbody id="changeLogTableBody"></tbody>
                 </table>
                 <div style="padding: 10px 5px; text-align: center;">
-                    <span class="ib"><button class="c" onclick="loadMoreChangeLog(this)">加载更多</button></span>
+                    <button class="c ib" onclick="loadMoreChangeLog(this)">加载更多</button>
                 </div>
             </div>
         </div>
@@ -92,28 +92,31 @@
             <h2>设置</h2>
             <table class="nb">
                 <tr>
-                    <td class="w200"><label for="allow_new_client_apply">允许申请新客户端</label></td>
+                    <td class="w250"><label for="allow_new_client_apply">允许申请新客户端</label></td>
                     <td class="tl"><input type="checkbox" id="allow_new_client_apply">
                         <label for="allow_new_client_apply">启用</label>
                     </td>
                 </tr>
                 <tr>
-                    <td class="w200"><label>允许注册客户端的群组</label>
-                        <p class="cr">该功能暂未实现</p>
+                    <td class="w250"><label>允许注册客户端的群组</label>
+                        <div style="padding: 10px 5px;">
+                            <button class="c ib" disabled onclick="cancelGroupChanges(this)">取消更改</button>
+                            <button class="c ib" disabled onclick="saveGroupChanges(this)">确认更改</button>
+                        </div>
                     </td>
                     <td>
                         <div class="tl">
                             <p>已选择的群组</p>
-                            <div id="new_apply_allowed_group_ids_selected" class="select-item-container">无</div>
+                            <div id="new_apply_allowed_group_ids_selected" class="select-item-container">加载中...</div>
                         </div>
                         <div class="tl">
                             <p>可选群组</p>
-                            <div id="new_apply_allowed_group_ids_available" class="select-item-container">无</div>
+                            <div id="new_apply_allowed_group_ids_available" class="select-item-container">加载中...</div>
                         </div>
                     </td>
                 </tr>
                 <tr>
-                    <td class="w200"><label for="uid_blacklist">不允许注册客户端的用户</label>
+                    <td class="w250"><label for="uid_blacklist">不允许注册客户端的用户</label>
                         <p class="cr">该功能暂未实现</p>
                     </td>
                     <td></td>

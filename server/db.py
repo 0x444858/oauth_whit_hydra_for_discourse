@@ -21,7 +21,8 @@ TARGET_TYPES = {
 
 # db oauth, table sys_config
 DEFAULT_SYSTEM_CONFIGS = {
-    "allow_new_client_apply": "t"
+    "allow_new_client_apply": "t",
+    "new_apply_allowed_group_ids": ""
 }
 
 

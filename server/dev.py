@@ -1,7 +1,26 @@
-from flask import Flask, send_file
+import json
+from flask import Flask, send_file, request
 from config import load_config
 
 app = Flask(__name__, template_folder='templates')
+
+
+@app.route('/g.json')
+def g_json():
+    with open('temp/g.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    page = request.args.get('page', 0, type=int)
+    if page >= 1:
+        data['groups'] = []
+    return data
+
+
+@app.route('/call/admin/settings')
+def admin_settings():
+    return {
+        'allow_new_client_apply': 't',
+        'new_apply_allowed_group_ids': '[12,50, 51]'
+    }
 
 
 @app.route('/call/<path:path>')

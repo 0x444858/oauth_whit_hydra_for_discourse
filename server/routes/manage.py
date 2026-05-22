@@ -125,9 +125,20 @@ def apply_new_app():
     c_u = get_user_info_current_session(request)
     if c_u is None:
         return 'Need login', 403
-    sys_configs = db.get_sys_config()
-    if sys_configs.get('allow_new_client_apply') == 'f' and c_u.get('admin') is not True:
-        return 'New client apply is not allowed', 403
+    if c_u.get('admin') is not True:
+        sys_configs = db.get_sys_config()
+        if sys_configs.get('allow_new_client_apply') == 'f':
+            return 'New client apply is not allowed', 403
+        allowed_ids_str = sys_configs.get('new_apply_allowed_group_ids', '')
+        if allowed_ids_str:
+            try:
+                allowed_ids = json.loads(allowed_ids_str)
+            except json.JSONDecodeError:
+                allowed_ids = []
+            if allowed_ids:
+                user_groups = c_u.get('groups', [])
+                if not {g['id'] for g in user_groups}.intersection(allowed_ids):
+                    return 'You are not in an allowed group', 403
     uid = c_u.get('id')
     username = c_u.get('username')
     try:

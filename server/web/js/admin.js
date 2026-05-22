@@ -171,23 +171,191 @@ function clearChangeLogFilter() {
     reloadChangeLog();
 }
 
-function initSettings() {
-    fetch('/call/admin/settings')
-        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(configs => {
-            const cb = document.getElementById('allow_new_client_apply');
-            if (cb) cb.checked = configs.allow_new_client_apply === 't';
+// === 群组选择器 ===
+let _serverGroupIds = [];
+let _currentGroupIds = [];
+let _allGroups = [];
+let _groupCancelBtn = null;
+let _groupSaveBtn = null;
+
+function _arraysEqual(a, b) {
+    if (a.length !== b.length) return false;
+    const sa = [...a].sort((x, y) => x - y);
+    const sb = [...b].sort((x, y) => x - y);
+    return sa.every((v, i) => v === sb[i]);
+}
+
+function _findGroupButtons() {
+    const settingsDiv = document.getElementById('settings');
+    if (!settingsDiv) return;
+    settingsDiv.querySelectorAll('button.c.ib').forEach(btn => {
+        const t = btn.textContent.trim();
+        if (t === '取消更改') _groupCancelBtn = btn;
+        if (t === '确认更改') _groupSaveBtn = btn;
+    });
+}
+
+function _updateGroupActionButtons() {
+    const changed = !_arraysEqual(_serverGroupIds, _currentGroupIds);
+    if (_groupCancelBtn) _groupCancelBtn.disabled = !changed;
+    if (_groupSaveBtn) _groupSaveBtn.disabled = !changed;
+}
+
+function _getGroupName(id) {
+    const g = _allGroups.find(g => g.id === id);
+    return g ? g.name : null;
+}
+
+function renderGroupPanels() {
+    var selectedDiv = document.getElementById('new_apply_allowed_group_ids_selected');
+    var availableDiv = document.getElementById('new_apply_allowed_group_ids_available');
+
+    var existingIds = new Set(_allGroups.map(function (g) { return g.id; }));
+    _currentGroupIds.forEach(function (id) {
+        if (!existingIds.has(id)) {
+            _allGroups.push({ id: id, name: null });
+        }
+    });
+
+    if (selectedDiv) {
+        selectedDiv.innerHTML = '';
+        if (_currentGroupIds.length === 0) {
+            selectedDiv.textContent = '无';
+        } else {
+            _currentGroupIds.forEach(function (id) {
+                var btn = document.createElement('button');
+                btn.className = 'c group-btn';
+                var name = _getGroupName(id);
+                if (name) {
+                    btn.textContent = name;
+                } else {
+                    btn.textContent = '(ID: ' + id + ')';
+                    btn.classList.add('ghost');
+                }
+                btn.onclick = function () { deselectGroup(this, id); };
+                selectedDiv.appendChild(btn);
+            });
+        }
+    }
+
+    if (availableDiv) {
+        availableDiv.innerHTML = '';
+        if (_allGroups.length === 0) {
+            availableDiv.textContent = '无可用群组';
+        } else {
+            _allGroups.forEach(function (g) {
+                var btn = document.createElement('button');
+                btn.className = 'c group-btn';
+                var isGhost = g.name === null;
+                if (isGhost) {
+                    btn.textContent = '(ID: ' + g.id + ')';
+                    btn.classList.add('ghost');
+                    btn.disabled = true;
+                } else {
+                    btn.textContent = g.name;
+                    if (_currentGroupIds.includes(g.id)) {
+                        btn.disabled = true;
+                    } else {
+                        btn.onclick = function () { selectGroup(this, g.id); };
+                    }
+                }
+                availableDiv.appendChild(btn);
+            });
+        }
+    }
+
+    _updateGroupActionButtons();
+}
+
+function selectGroup(btn, id) {
+    if (!_currentGroupIds.includes(id)) {
+        _currentGroupIds.push(id);
+        renderGroupPanels();
+    }
+}
+
+function deselectGroup(btn, id) {
+    _currentGroupIds = _currentGroupIds.filter(function (x) { return x !== id; });
+    renderGroupPanels();
+}
+
+function cancelGroupChanges(btn) {
+    _currentGroupIds = [..._serverGroupIds];
+    renderGroupPanels();
+}
+
+function saveGroupChanges(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '保存中...'; }
+    var value = JSON.stringify(_currentGroupIds);
+    fetch('/call/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'new_apply_allowed_group_ids', value: value })
+    })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            _serverGroupIds = [..._currentGroupIds];
+            _updateGroupActionButtons();
         })
-        .catch(e => console.error('加载系统设置失败:', e));
+        .catch(function (e) {
+            alert('保存群组设置失败：' + e.message);
+        })
+        .finally(function () {
+            if (btn) { btn.disabled = !_arraysEqual(_serverGroupIds, _currentGroupIds); btn.textContent = '确认更改'; }
+        });
+}
+
+function _fetchAllGroups(page, accumulator) {
+    var url = '/g.json';
+    if (page > 0) url += '?page=' + page;
+    return fetch(url)
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (data) {
+            if (!data.groups || data.groups.length === 0) return accumulator;
+            var groups = data.groups.map(function (g) { return { id: g.id, name: g.full_name || g.name }; });
+            return _fetchAllGroups(page + 1, accumulator.concat(groups));
+        });
+}
+
+function initSettings() {
+    _findGroupButtons();
+
+    fetch('/call/admin/settings')
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (configs) {
+            var cb = document.getElementById('allow_new_client_apply');
+            if (cb) cb.checked = configs.allow_new_client_apply === 't';
+
+            var idsStr = configs.new_apply_allowed_group_ids || '';
+            try {
+                _serverGroupIds = idsStr ? JSON.parse(idsStr) : [];
+            } catch (e) {
+                _serverGroupIds = [];
+            }
+            _currentGroupIds = [..._serverGroupIds];
+            renderGroupPanels();
+        })
+        .catch(function (e) { console.error('加载系统设置失败:', e); });
+
+    _fetchAllGroups(0, [])
+        .then(function (groups) {
+            _allGroups = groups;
+            renderGroupPanels();
+        })
+        .catch(function (e) {
+            console.error('加载群组列表失败:', e);
+            var availableDiv = document.getElementById('new_apply_allowed_group_ids_available');
+            if (availableDiv) availableDiv.textContent = '加载失败';
+        });
 
     document.getElementById('allow_new_client_apply')?.addEventListener('change', function () {
-        const value = this.checked ? 't' : 'f';
+        var value = this.checked ? 't' : 'f';
         fetch('/call/admin/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ key: 'allow_new_client_apply', value: value })
         })
-            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); })
-            .catch(e => { alert('保存设置失败：' + e.message); this.checked = !this.checked; });
+            .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); })
+            .catch(function (e) { alert('保存设置失败：' + e.message); this.checked = !this.checked; });
     });
 }
