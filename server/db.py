@@ -85,7 +85,7 @@ class DbManager:
                     conn.rollback()
                 except:
                     pass
-            raise e
+            raise
         finally:
             if cur:
                 cur.close()
@@ -287,7 +287,7 @@ class DbManager:
         target_type_code = TARGET_TYPES.get(target_type.lower(), 0)
         sql = """
             INSERT INTO change_log (target_type, target_id, action_code, operator_uid, operator_username, 
-                action_reason, old_value, new_value)
+                reason, old_value, new_value)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
         self._execute_internal('oauth', sql,
@@ -343,7 +343,7 @@ class DbManager:
                 where_clauses.append("operator_username LIKE %s")
                 params_list.append(f"%{filters['operator_username']}%")
             if filters.get('reason', ''):
-                where_clauses.append("action_reason LIKE %s")
+                where_clauses.append("reason LIKE %s")
                 params_list.append(f"%{filters['reason']}%")
         where_sql = ('WHERE ' + " AND ".join(where_clauses)) if where_clauses else ''
         sql = f"""
@@ -357,7 +357,7 @@ class DbManager:
                 operator_username,
                 old_value,
                 new_value,
-                action_reason
+                reason
             FROM change_log
             {where_sql}
             ORDER BY action_time DESC

@@ -33,7 +33,7 @@ def check_access_token_and_scope(req, needed_scopes: list[str]) -> tuple[dict, b
     token_info, status = get_access_token_info(req)
     if status is not True:
         return token_info, status
-    if set(needed_scopes) > set(token_info['scope'].split()):
+    if not (set(needed_scopes) <= set(token_info.get('scope', '').split())):
         return 'Insufficient scope', 403
     return token_info, True
 

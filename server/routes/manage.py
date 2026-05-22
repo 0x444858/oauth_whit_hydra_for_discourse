@@ -78,7 +78,7 @@ def manage_revoke():
             return '', 204
         else:
             j = r.json()
-            return 'Revoke failed', j['status_code']
+            return 'Revoke failed', (j.get('status_code') or 500)
     except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError):
         return 'Internal server error', 500
 
@@ -94,7 +94,7 @@ def manage_my_app():
     if c_u.get('admin') is not True or uid is None:
         uid = str(c_u['id'])
     uid_all = uid_all and c_u.get('admin') is True
-    page = request.args.get('page', 1)
+    page = request.args.get('page', 1, type=int)
     return jsonify(db.get_client_by_uid(uid, page, uid_all))
 
 
@@ -303,4 +303,4 @@ def update_app():
                 return 'Update failed', r.status_code
         except requests.exceptions.RequestException:
             return 'Internal server error', 500
-
+    return 'Invalid request', 400

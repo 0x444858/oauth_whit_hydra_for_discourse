@@ -34,7 +34,7 @@ def userinfo():
                 'id': g.get('id'),
                 'name': g.get('name')
             }
-            for g in u.get('groups')
+            for g in (u.get('groups') or [])
         ]
     }
     used_scopes = {'profile'}

@@ -11,6 +11,7 @@ admin_bp = Blueprint('admin', __name__)
 def _validate_bool(value):
     if value not in ('t', 'f'):
         return "Value must be 't' or 'f'"
+    return
 
 
 def _validate_group_ids(value):
@@ -22,6 +23,7 @@ def _validate_group_ids(value):
         return "Value must be empty or a JSON array of integers (e.g. '[12,50,51]')"
     if not isinstance(arr, list) or not all(isinstance(x, int) for x in arr):
         return "Value must be empty or a JSON array of integers (e.g. '[12,50,51]')"
+    return
 
 
 SETTINGS_VALIDATORS = {
@@ -37,6 +39,7 @@ def admin_required(f):
         if c_u is None or c_u.get('admin') is not True:
             return '', 404
         return f(*args, **kwargs)
+
     return decorated
 
 
