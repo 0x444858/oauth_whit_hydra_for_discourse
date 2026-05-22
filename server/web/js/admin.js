@@ -114,7 +114,7 @@ function _changeLogFetch() {
     for (const [k, v] of Object.entries(filters))
         params.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
     params.push('page=' + _changeLogPage);
-    return fetch('/call/manage/changeLog?' + params.join('&'))
+    return fetch('/call/admin/changeLog?' + params.join('&'))
         .then(r => {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.json();
