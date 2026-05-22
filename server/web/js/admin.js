@@ -56,7 +56,7 @@ function getExtraParams() {
     return {};
 }
 
-let _changeLogPage = 1;
+let _changeLogPage = 0;
 let _changeLogHasMore = true;
 
 function _changeLogOptionText(selectId, value) {
@@ -155,6 +155,7 @@ function loadMoreChangeLog(button) {
             button.textContent = _changeLogHasMore ? '加载更多' : '无更多数据';
         }
     }).catch(e => {
+        _changeLogPage--;
         console.error('加载操作日志失败:', e);
         alert('加载操作日志失败：' + e.message);
         if (button) { button.disabled = false; button.textContent = '加载更多'; }
