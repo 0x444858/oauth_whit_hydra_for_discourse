@@ -1,3 +1,4 @@
+import json
 from functools import wraps
 
 from flask import Blueprint, request, jsonify, current_app
@@ -5,6 +6,28 @@ from flask import Blueprint, request, jsonify, current_app
 from discourse import get_user_info_current_session
 
 admin_bp = Blueprint('admin', __name__)
+
+
+def _validate_bool(value):
+    if value not in ('t', 'f'):
+        return "Value must be 't' or 'f'"
+
+
+def _validate_group_ids(value):
+    if value == '':
+        return None
+    try:
+        arr = json.loads(value)
+    except json.JSONDecodeError:
+        return "Value must be empty or a JSON array of integers (e.g. '[12,50,51]')"
+    if not isinstance(arr, list) or not all(isinstance(x, int) for x in arr):
+        return "Value must be empty or a JSON array of integers (e.g. '[12,50,51]')"
+
+
+SETTINGS_VALIDATORS = {
+    'allow_new_client_apply': _validate_bool,
+    'new_apply_allowed_group_ids': _validate_group_ids,
+}
 
 
 def admin_required(f):
@@ -49,6 +72,13 @@ def admin_set_settings():
     value = j.get('value')
     if not key or value is None:
         return 'Missing parameter', 400
+    validator = SETTINGS_VALIDATORS.get(key)
+    if validator:
+        err = validator(value)
+        if err:
+            return err, 400
+    else:
+        return 'Invalid key', 400
     c_u = get_user_info_current_session(request)
     old = db.get_sys_config().get(key)
     db.set_sys_config(key, value)
