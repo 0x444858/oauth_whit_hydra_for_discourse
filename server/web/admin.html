@@ -92,16 +92,30 @@
             <h2>设置</h2>
             <table class="nb">
                 <tr>
-                    <td class="w250"><label for="allow_new_client_apply">允许申请新客户端</label></td>
+                    <td class="w250"><label for="allow_new_client_apply">允许申请新客户端</label>
+                        <p class="cr">管理员无视此限制</p>
+                    </td>
                     <td class="tl"><input type="checkbox" id="allow_new_client_apply">
                         <label for="allow_new_client_apply">启用</label>
                     </td>
                 </tr>
                 <tr>
+                    <td class="w250">
+                        <label for="doc_url">开发者文档url</label>
+                    </td>
+                    <td class="tl flex-container" style="gap: 6px;">
+                        <input type="text" id="doc_url" class="flex-item" placeholder="https://example.com/t/topic/1">
+                        <button class="c ib" id="docUrlCancelBtn" disabled onclick="cancelDocUrl(this)">取消更改</button>
+                        <button class="c ib" id="docUrlSaveBtn" disabled onclick="saveDocUrl(this)">确认更改</button>
+                    </td>
+
+                </tr>
+                <tr>
                     <td class="w250"><label>允许注册客户端的群组</label>
+                        <p class="cr">管理员无视此限制</p>
                         <div style="padding: 10px 5px;">
-                            <button class="c ib" disabled onclick="cancelGroupChanges(this)">取消更改</button>
-                            <button class="c ib" disabled onclick="saveGroupChanges(this)">确认更改</button>
+                            <button class="c ib" id="groupCancelBtn" disabled onclick="cancelGroupChanges(this)">取消更改</button>
+                            <button class="c ib" id="groupSaveBtn" disabled onclick="saveGroupChanges(this)">确认更改</button>
                         </div>
                     </td>
                     <td>

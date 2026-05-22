@@ -177,22 +177,15 @@ let _currentGroupIds = [];
 let _allGroups = [];
 let _groupCancelBtn = null;
 let _groupSaveBtn = null;
+let _serverDocUrl = '';
+let _docUrlCancelBtn = null;
+let _docUrlSaveBtn = null;
 
 function _arraysEqual(a, b) {
     if (a.length !== b.length) return false;
     const sa = [...a].sort((x, y) => x - y);
     const sb = [...b].sort((x, y) => x - y);
     return sa.every((v, i) => v === sb[i]);
-}
-
-function _findGroupButtons() {
-    const settingsDiv = document.getElementById('settings');
-    if (!settingsDiv) return;
-    settingsDiv.querySelectorAll('button.c.ib').forEach(btn => {
-        const t = btn.textContent.trim();
-        if (t === '取消更改') _groupCancelBtn = btn;
-        if (t === '确认更改') _groupSaveBtn = btn;
-    });
 }
 
 function _updateGroupActionButtons() {
@@ -299,10 +292,50 @@ function saveGroupChanges(btn) {
         })
         .catch(function (e) {
             alert('保存群组设置失败：' + e.message);
+            _updateGroupActionButtons();
         })
         .finally(function () {
-            if (btn) { btn.disabled = !_arraysEqual(_serverGroupIds, _currentGroupIds); btn.textContent = '确认更改'; }
+            if (btn) { btn.textContent = '确认更改'; }
         });
+}
+
+function _updateDocUrlButtons() {
+    const input = document.getElementById('doc_url');
+    if (!input) return;
+    const changed = input.value.trim() !== _serverDocUrl;
+    if (_docUrlCancelBtn) _docUrlCancelBtn.disabled = !changed;
+    if (_docUrlSaveBtn) _docUrlSaveBtn.disabled = !changed;
+}
+
+function saveDocUrl(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '保存中...'; }
+    const input = document.getElementById('doc_url');
+    if (!input) return;
+    const value = input.value.trim();
+    fetch('/call/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'doc_url', value: value })
+    })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            _serverDocUrl = value;
+            _updateDocUrlButtons();
+        })
+        .catch(function (e) {
+            alert('保存文档URL失败：' + e.message);
+            _updateDocUrlButtons();
+        })
+        .finally(function () {
+            if (btn) { btn.textContent = '确认更改'; }
+        });
+}
+
+function cancelDocUrl(btn) {
+    const input = document.getElementById('doc_url');
+    if (!input) return;
+    input.value = _serverDocUrl;
+    _updateDocUrlButtons();
 }
 
 function _fetchAllGroups(page, accumulator) {
@@ -318,7 +351,10 @@ function _fetchAllGroups(page, accumulator) {
 }
 
 function initSettings() {
-    _findGroupButtons();
+    _groupCancelBtn = document.getElementById('groupCancelBtn');
+    _groupSaveBtn = document.getElementById('groupSaveBtn');
+    _docUrlCancelBtn = document.getElementById('docUrlCancelBtn');
+    _docUrlSaveBtn = document.getElementById('docUrlSaveBtn');
 
     fetch('/call/admin/settings')
         .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -334,6 +370,13 @@ function initSettings() {
             }
             _currentGroupIds = [..._serverGroupIds];
             renderGroupPanels();
+
+            var docUrlInput = document.getElementById('doc_url');
+            _serverDocUrl = configs.doc_url || '';
+            if (docUrlInput) {
+                docUrlInput.value = _serverDocUrl;
+                docUrlInput.addEventListener('input', _updateDocUrlButtons);
+            }
         })
         .catch(function (e) { console.error('加载系统设置失败:', e); });
 
@@ -349,13 +392,17 @@ function initSettings() {
         });
 
     document.getElementById('allow_new_client_apply')?.addEventListener('change', function () {
-        var value = this.checked ? 't' : 'f';
+        var self = this;
+        var value = self.checked ? 't' : 'f';
         fetch('/call/admin/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ key: 'allow_new_client_apply', value: value })
         })
             .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); })
-            .catch(function (e) { alert('保存设置失败：' + e.message); this.checked = !this.checked; });
+            .catch(function (e) {
+                alert('保存设置失败：' + e.message);
+                self.checked = !self.checked;
+            });
     });
 }

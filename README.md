@@ -192,3 +192,7 @@ location / {
     proxy_read_timeout 60s;
 }
 ```
+
+### 设置开发者文档
+
+[doc.md](./server/web/doc.md)是一个示例的开发者文档，将其发布至您的discourse站点后，在管理员后台设置开发者文档的url为对应话题的url。

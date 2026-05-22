@@ -9,7 +9,6 @@ PUBLIC_ROUTES = {
 }
 USER_ROUTES = {
     'manage': 'web/manage.html',
-    'doc': 'web/doc.html',
     'js/manage.js': 'web/js/manage.js',
     'css/manage.css': 'web/css/manage.css'
 }
@@ -34,4 +33,13 @@ def file_sender(path):
         return send_file(ADMIN_ROUTES[path])
     elif path in USER_ROUTES:
         return send_file(USER_ROUTES[path])
+    return '', 404
+
+
+@static_bp.route('/call/doc')
+def doc_redirect():
+    db = current_app.config['DB']
+    url = db.get_sys_config().get('doc_url', '')
+    if url:
+        return redirect(url)
     return '', 404

@@ -1,5 +1,6 @@
 import json
 from functools import wraps
+from urllib.parse import urlparse
 
 from flask import Blueprint, request, jsonify, current_app
 
@@ -26,9 +27,21 @@ def _validate_group_ids(value):
     return
 
 
+def _validate_url(value):
+    if not value:
+        return None
+    parsed = urlparse(value)
+    if parsed.scheme not in ('http', 'https'):
+        return "URL scheme must be http or https"
+    if not parsed.netloc:
+        return "URL must include a host"
+    return None
+
+
 SETTINGS_VALIDATORS = {
     'allow_new_client_apply': _validate_bool,
     'new_apply_allowed_group_ids': _validate_group_ids,
+    'doc_url': _validate_url,
 }
 
 
@@ -75,6 +88,7 @@ def admin_set_settings():
     value = j.get('value')
     if not key or value is None:
         return 'Missing parameter', 400
+    value = value.strip()
     validator = SETTINGS_VALIDATORS.get(key)
     if validator:
         err = validator(value)

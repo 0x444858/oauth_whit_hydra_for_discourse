@@ -22,7 +22,8 @@ def session_current():
 def admin_settings():
     return {
         'allow_new_client_apply': 't',
-        'new_apply_allowed_group_ids': '[12,50, 51]'
+        'new_apply_allowed_group_ids': '[12,50, 51]',
+        'doc_url':'https://example.com'
     }
 
 
