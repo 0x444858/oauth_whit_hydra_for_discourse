@@ -322,6 +322,11 @@
                             avatarDiv.style.backgroundImage = `url('${avatarUrl}')`;
                             avatarDiv.style.backgroundSize = 'cover';
                             avatarDiv.title = data.current_user.username;
+                            avatarDiv.style.cursor = 'pointer';
+                            avatarDiv.addEventListener('click', () => {
+                                const encoded = encodeURIComponent(data.current_user.username);
+                                window.location.href = `/u/${encoded}/summary`;
+                            });
                         }
                         if (data.current_user.admin) {
                             if (location.pathname.endsWith('/admin')) {
