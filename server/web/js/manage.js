@@ -187,6 +187,7 @@ function loadMoreAuthData(button) {
 
 // 加载更多日志数据
 let lastLogTimestamp = null;
+let myApps_page = 1;
 function loadMoreAppLog(button) {
     const t_body = document.getElementById('appLogsTableBody');
     const scope_row = document.getElementById('appLogsScopeRow');
@@ -372,7 +373,7 @@ function applyNewApp(button) {
         .then(response => {
             if (!response.ok) {
                 return response.text().then(text => {
-                    alert(text + `请求失败: ${response.status}`);
+                    throw new Error(text || `HTTP ${response.status}`);
                 });
             }
             return response.json();
@@ -392,10 +393,12 @@ function applyNewApp(button) {
             for (let i = 0; i < spans.length; i++) {
                 spans[i].textContent = texts[i];
             }
-            return;
+            button.disabled = false;
+            button.textContent = original_button_text;
         })
         .catch(error => {
-            alert('申请新应用失败:', error);
+            console.error('申请新应用失败:', error);
+            alert('申请失败：' + error.message);
             button.disabled = false;
             button.textContent = original_button_text;
         })
@@ -451,7 +454,7 @@ function loadMoreMyApps(button, page = null, reload = false) {
         });
     }
     const t_body = document.getElementById('myAppTableBody');
-    let url = '/call/manage/MyApps';
+    let url = '/call/manage/myApps';
     p = objectToFormString({ ...getExtraParams(), page: page })
     if (p) url += '?' + p;
     fetch(url)
@@ -475,11 +478,11 @@ function loadMoreMyApps(button, page = null, reload = false) {
                 cellName.textContent = item.client_name;
                 row.appendChild(cellName);
                 const cellOwner = document.createElement('td');
-                cellOwner.textContent = item.owner === window.current_user.id ? window.current_user.username : `(UID: ${item.owner})`;
+                cellOwner.textContent = item.owner == window.current_user.id ? window.current_user.username : `(UID: ${item.owner})`;
                 row.appendChild(cellOwner);
                 const cellTime = document.createElement('td');
-                const createdStr = formatTimestamp(item.created_at);
-                const updatedStr = formatTimestamp(item.updated_at);
+                const createdStr = formatDate(item.created_at);
+                const updatedStr = formatDate(item.updated_at);
                 cellTime.innerHTML = `${createdStr}<br>${updatedStr}`;
                 row.appendChild(cellTime);
                 const cellUri = document.createElement('td');
@@ -552,9 +555,9 @@ function manageApp(client_id) {
         addRedirectUri(uri);
     });
     const clientSecretRow = document.getElementById('clientSecretRow');
-    if (clientSecretRow) clientSecretRow.style.display = 'block';
+    if (clientSecretRow) clientSecretRow.style.display = 'table-row';
     const clientOwnerRow = document.getElementById('clientOwnerRow');
-    if (clientOwnerRow && window.current_user.admin) clientOwnerRow.style.display = 'block';
+    if (clientOwnerRow && window.current_user.admin) clientOwnerRow.style.display = 'table-row';
     const deleteBtn = document.getElementById('deleteAppBtn');
     if (deleteBtn) deleteBtn.style.display = 'inline-block';
     toggleNewAppTab();
@@ -603,6 +606,7 @@ function deleteApp(triggerBtn) {
         });
 }
 function updateApp(data, button) {
+    const original_button_text = button.textContent;
     const client_id = data.client_id;
     originClientData = window.client_data[client_id];
     if (originClientData === undefined) {
@@ -632,7 +636,7 @@ function updateApp(data, button) {
         .then(response => {
             if (!response.ok) {
                 return response.text().then(text => {
-                    alert(text + `请求失败: ${response.status}`);
+                    throw new Error(text || `HTTP ${response.status}`);
                 });
             }
             return response.json();
@@ -652,10 +656,12 @@ function updateApp(data, button) {
             for (let i = 0; i < spans.length; i++) {
                 spans[i].textContent = texts[i];
             }
-            return;
+            button.disabled = false;
+            button.textContent = original_button_text;
         })
         .catch(error => {
-            alert('更改应用失败:', error);
+            console.error('更改应用失败:', error);
+            alert('更改失败：' + error.message);
             button.disabled = false;
             button.textContent = original_button_text;
         })

@@ -295,7 +295,7 @@ function saveGroupChanges(btn) {
             _updateGroupActionButtons();
         })
         .finally(function () {
-            if (btn) { btn.textContent = '确认更改'; }
+            if (btn) { btn.disabled = false; btn.textContent ='确认更改'; }
         });
 }
 
@@ -327,7 +327,7 @@ function saveDocUrl(btn) {
             _updateDocUrlButtons();
         })
         .finally(function () {
-            if (btn) { btn.textContent = '确认更改'; }
+            if (btn) { btn.disabled = false; btn.textContent = '确认更改'; }
         });
 }
 

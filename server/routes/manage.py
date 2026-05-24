@@ -95,7 +95,7 @@ def manage_my_app():
     db = current_app.config['DB']
     c_u = get_user_info_current_session(request)
     if c_u is None:
-        return 'Need login', 404
+        return 'Need login', 403
     uid = request.args.get('uid')
     uid_all_raw = request.args.get('uid_all')
     if c_u.get('admin') is not True or uid is None:
