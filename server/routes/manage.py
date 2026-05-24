@@ -249,6 +249,8 @@ def update_app():
     c_u = get_user_info_current_session(request)
     if c_u is None:
         return 'Need login', 403
+    if not client_id or not client_name:
+        return 'Missing parameter', 400
     tc = check_client_id(client_id)
     if tc is not True:
         return tc, 400

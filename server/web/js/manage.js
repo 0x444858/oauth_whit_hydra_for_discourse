@@ -616,6 +616,7 @@ function updateApp(data, button) {
         req_data.new_owner = data.new_owner;
         req_data.reason = reason.trim();
     }
+    req_data.client_id = client_id;
     req_data.client_name = data.client_name;
     req_data.scope = data.scope;
     req_data.redirect_uris = data.redirect_uris;
