@@ -306,3 +306,11 @@ textarea {
 .cr {
     color: red;
 }
+
+button.d {
+    background-color: #c80001;
+}
+
+button.d:hover:not([disabled]) {
+    outline: 3px solid #a00001;
+}

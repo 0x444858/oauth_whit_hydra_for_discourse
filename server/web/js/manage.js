@@ -426,12 +426,19 @@ function resetApplyNewApp(needConfirm = true) {
     if (error_message) error_message.style.display = 'none';
     const clientOwnerRow = document.getElementById('clientOwnerRow');
     if (clientOwnerRow) clientOwnerRow.style.display = 'none';
+    const deleteBtn = document.getElementById('deleteAppBtn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
     newAppPageMode = 'new';
 }
 
 // 加载更多我的应用
-function loadMoreMyApps(button, page = 1, reload = false) {
-    if (reload) myApps_page = 1;
+function loadMoreMyApps(button, page = null, reload = false) {
+    if (reload) {
+        myApps_page = 1;
+        const t_body = document.getElementById('myAppTableBody');
+        if (t_body) t_body.innerHTML = '';
+    }
+    if (page === null) page = myApps_page;
     const original_button_text = button.textContent;
     button.disabled = true;
     button.textContent = '加载中...';
@@ -548,10 +555,53 @@ function manageApp(client_id) {
     if (clientSecretRow) clientSecretRow.style.display = 'block';
     const clientOwnerRow = document.getElementById('clientOwnerRow');
     if (clientOwnerRow && window.current_user.admin) clientOwnerRow.style.display = 'block';
+    const deleteBtn = document.getElementById('deleteAppBtn');
+    if (deleteBtn) deleteBtn.style.display = 'inline-block';
     toggleNewAppTab();
 }
 
-// 推送更改的设置
+// 删除应用
+function deleteApp(triggerBtn) {
+    const client_id_input = document.getElementById('newApp_client_id');
+    if (!client_id_input || !client_id_input.value) {
+        alert('无法获取应用ID');
+        return;
+    }
+    const client_id = client_id_input.value;
+    const client_name = document.getElementById('newApp_client_name')?.value || client_id;
+    if (!confirm(`确定要删除应用 ${client_name} (ID: ${client_id}) 吗？此操作不可逆！`)) {
+        return;
+    }
+    triggerBtn.disabled = true;
+    triggerBtn.textContent = '删除中...';
+    const formData = new URLSearchParams();
+    formData.append('client_id', client_id);
+    fetch('/call/manage/deleteApp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString()
+    })
+        .then(response => {
+            if (response.status === 204) {
+                alert('应用已删除');
+                resetApplyNewApp(false);
+                toggleNewAppTab();
+                loadMoreMyApps(document.querySelector('#myApp button.c'), 1, true);
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || `HTTP ${response.status}`);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('删除应用失败:', error);
+            alert('删除失败：' + error.message);
+            triggerBtn.disabled = false;
+            triggerBtn.textContent = '删除应用';
+        });
+}
 function updateApp(data, button) {
     const client_id = data.client_id;
     originClientData = window.client_data[client_id];
