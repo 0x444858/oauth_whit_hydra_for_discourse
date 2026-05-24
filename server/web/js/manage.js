@@ -361,7 +361,7 @@ function applyNewApp(button) {
         if (reset_secret && reset_secret.checked) data.reset_secret = true;
         const newApp_owner = document.getElementById('newApp_owner');
         if (newApp_owner && newApp_owner.value && window.current_user.admin) data.new_owner = newApp_owner.value;
-        return updateApp(data, button);
+        return updateApp(data, button, original_button_text);
     }
     fetch(url, {
         method: 'POST',
@@ -605,8 +605,7 @@ function deleteApp(triggerBtn) {
             triggerBtn.textContent = '删除应用';
         });
 }
-function updateApp(data, button) {
-    const original_button_text = button.textContent;
+function updateApp(data, button, original_button_text) {
     const client_id = data.client_id;
     originClientData = window.client_data[client_id];
     if (originClientData === undefined) {
