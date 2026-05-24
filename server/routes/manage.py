@@ -13,7 +13,7 @@ manage_bp = Blueprint('manage', __name__)
 def manage_app_log():
     db = current_app.config['DB']
     uid = request.args.get('uid')
-    uid_all = request.args.get('uid_all')
+    uid_all_raw = request.args.get('uid_all')
     time_limit = request.args.get('time_limit')
     c_u = get_user_info_current_session(request)
     if c_u is None:
@@ -22,7 +22,7 @@ def manage_app_log():
         uid = c_u.get('id')
     if time_limit is not None:
         time_limit = int(time_limit)
-    uid_all = uid_all and c_u.get('admin')
+    uid_all = uid_all_raw is not None and c_u.get('admin') is True
     r = db.get_recent_logs(int(uid), time_limit, uid_all)
     client_ids = [row['client_id'] for row in r]
     client_dict = db.get_client_names(client_ids)
@@ -90,10 +90,10 @@ def manage_my_app():
     if c_u is None:
         return 'Need login', 404
     uid = request.args.get('uid')
-    uid_all = request.args.get('uid_all')
+    uid_all_raw = request.args.get('uid_all')
     if c_u.get('admin') is not True or uid is None:
         uid = str(c_u['id'])
-    uid_all = uid_all and c_u.get('admin') is True
+    uid_all = uid_all_raw is not None and c_u.get('admin') is True
     page = request.args.get('page', 1, type=int)
     return jsonify(db.get_client_by_uid(uid, page, uid_all))
 
@@ -111,9 +111,11 @@ def apply_new_app():
     scope = j.get('scope')
     if not all([client_id, client_name, redirect_uris, scope]):
         return 'Missing parameter', 400
-    if not all([isinstance(client_id, str), isinstance(client_name, str), isinstance(redirect_uris, list),
+    if not all([isinstance(client_id, str), isinstance(client_name, str),
                 isinstance(scope, str)]):
         return 'Invalid body', 400
+    if not isinstance(redirect_uris, list) or not all(isinstance(u, str) for u in redirect_uris):
+        return 'Invalid redirect_uris format', 400
     tc = check_client_id(client_id)
     if tc is not True:
         return tc, 400
@@ -257,6 +259,8 @@ def update_app():
     op_list = []
     log_list = []
     if redirect_uris:
+        if not isinstance(redirect_uris, list) or not all(isinstance(u, str) for u in redirect_uris):
+            return 'Invalid redirect_uris format', 400
         tr = check_redirect_uris(redirect_uris)
         if tr is not True:
             return tr, 400
@@ -266,6 +270,10 @@ def update_app():
             op_list.append({'op': 'replace', 'path': '/redirect_uris', 'value': redirect_uris})
             log_list.append(('change_redirect_uris', old_r, new_r))
     if new_owner and str(new_owner) != client_info.get('owner') and c_u.get('admin') is True:
+        try:
+            new_owner = int(new_owner)
+        except (ValueError, TypeError):
+            return 'Invalid new_owner', 400
         new_owner_info = get_user_info_global(new_owner)
         if new_owner_info is None:
             return 'New owner not exists', 400

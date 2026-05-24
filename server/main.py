@@ -1,3 +1,4 @@
+import atexit
 from flask import Flask
 from config_option import load_config
 from db import DbManager
@@ -7,11 +8,14 @@ def create_app():
     app = Flask(__name__, template_folder='templates')
     cfg = load_config()
     app.config['APP_CONFIG'] = cfg
-    app.config['DB'] = DbManager(cfg)
+    db = DbManager(cfg)
+    app.config['DB'] = db
     app.config['API_HEADERS'] = {
         'Api-Key': cfg['discourse_api_key'],
         'Api-Username': 'system'
     }
+
+    atexit.register(db.close_all)
 
     from routes.oauth import oauth_bp
     from routes.userinfo import userinfo_bp

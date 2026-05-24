@@ -32,7 +32,7 @@ def login():
         r.raise_for_status()
         redirect_to = r.json()['redirect_to']
     except requests.exceptions.RequestException:
-        return 'Internal server error point 1 in call login', 500
+        return 'Login accept failed', 500
     return redirect(redirect_to)
 
 
@@ -51,7 +51,7 @@ def consent():
         client: dict = j['client']
         metadata: dict = client.get('metadata')
     except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError):
-        return 'Internal server error point 1 in call consent', 500
+        return 'Failed to get consent info', 500
     consent_info = {
         'challenge': j.get('challenge'),
         'requested_scopes': j.get('requested_scope'),
@@ -100,7 +100,7 @@ def consent_accept():
         j: dict = r.json()
         consent_requested_scope: list = j['requested_scope']
     except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError):
-        return 'Internal server error point 1 in call consent accept', 500
+        return 'Failed to get consent info', 500
     if set(now_grant_scopes) > set(consent_requested_scope):
         return 'Invalid grant_scopes', 400
     if 'offline_access' in now_grant_scopes and any(s in cfg['sensitive_scopes_set'] for s in now_grant_scopes):
@@ -119,9 +119,9 @@ def consent_accept():
         r.raise_for_status()
         j = r.json()
         if 'redirect_to' not in j:
-            return 'Internal server error point 3 in call consent accept', 500
+            return 'Consent accept failed', 500
     except (requests.exceptions.RequestException, json.JSONDecodeError):
-        return 'Internal server error point 2 in call consent accept', 500
+        return 'Consent accept failed', 500
     return jsonify(j)
 
 
@@ -132,7 +132,7 @@ def consent_reject():
         j = request.get_json(silent=True)
         if j is None:
             return 'Invalid body', 400
-        consent_challenge = j['consent_challenge']
+        consent_challenge = j['challenge']
     except KeyError:
         return 'Invalid body', 400
     try:
@@ -145,7 +145,7 @@ def consent_reject():
         r.raise_for_status()
         j = r.json()
         if 'redirect_to' not in j:
-            return 'Internal server error point 2 in call consent reject', 500
+            return 'Consent reject failed', 500
     except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError):
-        return 'Internal server error point 1 in call consent reject', 500
+        return 'Consent reject failed', 500
     return jsonify(j)

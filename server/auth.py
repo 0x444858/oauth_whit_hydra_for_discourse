@@ -22,7 +22,7 @@ def get_access_token_info(req) -> tuple[dict, bool] | tuple[str, int]:
         r.raise_for_status()
         j: dict = r.json()
     except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError):
-        return 'Internal server error point 1 in get_access_token_info', 500
+        return 'Token verification failed', 500
     if not j.get('active'):
         return 'Access_token expired', 400
     return j, True

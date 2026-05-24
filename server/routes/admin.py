@@ -88,6 +88,8 @@ def admin_set_settings():
     value = j.get('value')
     if not key or value is None:
         return 'Missing parameter', 400
+    if not isinstance(value, str):
+        return 'Value must be a string', 400
     value = value.strip()
     validator = SETTINGS_VALIDATORS.get(key)
     if validator:

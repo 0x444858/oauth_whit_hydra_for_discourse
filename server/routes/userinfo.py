@@ -15,11 +15,11 @@ def userinfo():
     try:
         uid = int(token_info.get('sub'))
         client_id = token_info.get('client_id')
-    except ValueError:
-        return 'Internal server error point 1 in userinfo', 400
+    except (ValueError, TypeError):
+        return 'Invalid token subject', 400
     u = get_user_info_global(uid)
     if u is None:
-        return 'Internal server error point 2 in userinfo', 500
+        return 'Failed to get user info', 500
     rt_dict = {
         'id': u.get('id'),
         'username': u.get('username'),
@@ -69,8 +69,8 @@ def userinfo_email():
     try:
         uid = int(token_info.get('sub'))
         client_id = token_info.get('client_id')
-    except ValueError:
-        return 'Internal server error point 1 in userinfo_email', 400
+    except (ValueError, TypeError):
+        return 'Invalid token subject', 400
     additional = request.args.get('additional')
     if additional == 'email':
         sc = specific_scope_check(token_info, ['email'])
