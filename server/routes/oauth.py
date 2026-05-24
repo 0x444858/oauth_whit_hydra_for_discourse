@@ -31,7 +31,7 @@ def login():
         )
         r.raise_for_status()
         redirect_to = r.json()['redirect_to']
-    except requests.exceptions.RequestException:
+    except (requests.exceptions.RequestException, KeyError):
         return 'Login accept failed', 500
     return redirect(redirect_to)
 
@@ -62,10 +62,10 @@ def consent():
     nonce = secrets.token_urlsafe(16)
     html = render_template(
         'consent.html',
-        consent_info=json.dumps(consent_info, ensure_ascii=False),
+        consent_info=json.dumps(consent_info, ensure_ascii=False).replace('<', '\\u003c'),
         nonce=nonce,
         user_page_url_prefix=cfg['discourse_user_page_url_prefix'],
-        sensitive_scopes_list=json.dumps(cfg['sensitive_scopes_list'], ensure_ascii=False)
+        sensitive_scopes_list=json.dumps(cfg['sensitive_scopes_list'], ensure_ascii=False).replace('<', '\\u003c')
     )
     response = make_response(html)
     csp = (

@@ -40,5 +40,5 @@ def check_access_token_and_scope(req, needed_scopes: list[str]) -> tuple[dict, b
 
 def specific_scope_check(t, scope_to_check: list[str]) -> list[bool]:
     """检查 token 是否包含所需 scope，依次返回"""
-    token_scopes = t['scope'].split()
+    token_scopes = t.get('scope', '').split()
     return [scope in token_scopes for scope in scope_to_check]

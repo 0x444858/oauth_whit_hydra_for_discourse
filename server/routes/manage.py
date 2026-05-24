@@ -21,9 +21,16 @@ def manage_app_log():
     if c_u.get('admin') is not True or uid is None:
         uid = c_u.get('id')
     if time_limit is not None:
-        time_limit = int(time_limit)
+        try:
+            time_limit = int(time_limit)
+        except (ValueError, TypeError):
+            return 'Invalid time_limit', 400
     uid_all = uid_all_raw is not None and c_u.get('admin') is True
-    r = db.get_recent_logs(int(uid), time_limit, uid_all)
+    try:
+        uid_int = int(uid)
+    except (ValueError, TypeError):
+        return 'Invalid uid', 400
+    r = db.get_recent_logs(uid_int, time_limit, uid_all)
     client_ids = [row['client_id'] for row in r]
     client_dict = db.get_client_names(client_ids)
     return jsonify({
