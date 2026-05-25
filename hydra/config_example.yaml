@@ -19,7 +19,6 @@ urls:
     admin: http://127.0.0.1:4445/
   login: https://your.domain.com/call/login
   consent: https://your.domain.com/call/consent
-  logout: https://your.domain.com/call/logout
   error: https://your.domain.com/call/error
 
 webfinger:

@@ -50,8 +50,8 @@ class DbManager:
                 port=db_conf['port']
             )
             self._run_init()
-        except Exception as e:
-            raise e
+        except Exception:
+            raise
 
     def _get_pool(self, db_type: str) -> pool.SimpleConnectionPool:
         if db_type == 'oauth':

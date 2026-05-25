@@ -1,4 +1,5 @@
 import re
+from urllib.parse import urlparse
 
 
 def check_client_id(client_id: str) -> str | bool:
@@ -11,15 +12,22 @@ def check_client_id(client_id: str) -> str | bool:
 
 
 def check_redirect_uris(redirect_uris: list[str]) -> str | bool:
-    """检查 redirect_uris 是否符合规范"""
     errors = []
     for redirect_uri in redirect_uris:
         redirect_uri = redirect_uri.strip()
         if not redirect_uri:
             errors.append('Empty redirect_uri')
             continue
-        if redirect_uri.startswith('http://'):
-            errors.append('Redirect_uri cannot start with http://')
+        try:
+            parsed = urlparse(redirect_uri)
+        except Exception:
+            errors.append(f'Invalid URI: {redirect_uri}')
+            continue
+        if parsed.scheme != 'https':
+            errors.append(f'Only https scheme is allowed, got "{parsed.scheme}"')
+            continue
+        if not parsed.hostname:
+            errors.append('Redirect_uri must include a host')
             continue
         if '*' in redirect_uri or '#' in redirect_uri or '?' in redirect_uri:
             errors.append('Redirect_uri cannot contain * or # or ?')
