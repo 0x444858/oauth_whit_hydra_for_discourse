@@ -9,6 +9,9 @@
             const parser = new DOMParser();
             const admin_doc = parser.parseFromString(html, 'text/html');
             setAdminParts(admin_doc);
+        })
+        .catch(e => {
+            console.error('加载管理页面模板失败:', e);
         });
 }();
 
@@ -61,7 +64,9 @@ let _changeLogPage = 0;
 let _changeLogHasMore = true;
 
 function _changeLogOptionText(selectId, value) {
-    const opt = document.querySelector('#' + selectId + ' option[value="' + value + '"]');
+    const select = document.getElementById(selectId);
+    if (!select) return value;
+    const opt = select.querySelector('option[value="' + CSS.escape(value) + '"]');
     return opt ? opt.textContent : value;
 }
 

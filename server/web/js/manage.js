@@ -32,7 +32,7 @@ function revoke_all(button) {
 
 // 撤销单个客户端授权
 function revoke_token(button, client_id, client_name) {
-    client = client_name && client_name != client_id ? `${client_name} (ID: ${client_id})` : client_id;
+    const client = client_name && client_name != client_id ? `${client_name} (ID: ${client_id})` : client_id;
     if (!confirm(`确定要撤销应用 ${client} 的授权吗？`)) {
         return;
     }
@@ -196,7 +196,7 @@ function loadMoreAppLog(button) {
     let url = '/call/manage/appLog';
     let pd = getExtraParams();
     if (lastLogTimestamp !== null) pd = { ...pd, time_limit: lastLogTimestamp };
-    p = objectToFormString(pd);
+    const p = objectToFormString(pd);
     if (p) url += '?' + p;
     fetch(url)
         .then(response => {
@@ -456,7 +456,7 @@ function loadMoreMyApps(button, page = null, reload = false) {
     }
     const t_body = document.getElementById('myAppTableBody');
     let url = '/call/manage/myApps';
-    p = objectToFormString({ ...getExtraParams(), page: page })
+    const p = objectToFormString({ ...getExtraParams(), page: page });
     if (p) url += '?' + p;
     fetch(url)
         .then(response => {
@@ -529,7 +529,7 @@ function loadMoreMyApps(button, page = null, reload = false) {
 
 // 填入已有的应用设置
 function manageApp(client_id) {
-    originClientData = window.client_data[client_id];
+    const originClientData = window.client_data[client_id];
     if (originClientData === undefined) {
         alert(`Client ID: ${client_id} 无效`);
         return;
@@ -550,7 +550,9 @@ function manageApp(client_id) {
     client_id_input.disabled = true;
     client_name.value = originClientData.client_name;
     scope_input.value = originClientData.scope;
-    const redirect_uris = originClientData.redirect_uris;
+    const redirect_uris = Array.isArray(originClientData.redirect_uris)
+        ? originClientData.redirect_uris
+        : (originClientData.redirect_uris ? [originClientData.redirect_uris] : []);
     resetRedirectUris(false);
     redirect_uris.forEach(uri => {
         addRedirectUri(uri);
@@ -592,7 +594,9 @@ function deleteApp(triggerBtn) {
                 alert('应用已删除');
                 resetApplyNewApp(false);
                 toggleNewAppTab();
-                loadMoreMyApps(document.querySelector('#myApp button.c'), 1, true);
+                const myAppEl = document.getElementById('myApp');
+                const loadBtn = myAppEl && myAppEl.querySelector('button.c');
+                if (loadBtn) loadMoreMyApps(loadBtn, 1, true);
             } else {
                 return response.text().then(text => {
                     throw new Error(text || `HTTP ${response.status}`);
@@ -608,15 +612,21 @@ function deleteApp(triggerBtn) {
 }
 function updateApp(data, button, original_button_text) {
     const client_id = data.client_id;
-    originClientData = window.client_data[client_id];
+    const originClientData = window.client_data[client_id];
     if (originClientData === undefined) {
         alert(`Client ID: ${client_id} 无效`);
+        button.disabled = false;
+        button.textContent = original_button_text;
         return;
     }
     const req_data = {};
     if (data.new_owner && window.current_user.admin) {
         const reason = prompt('您正在以管理员身份更改此应用的所有者，请输入操作理由\n留空自动取消操作');
-        if (reason === null || !reason.trim()) return;
+        if (reason === null || !reason.trim()) {
+            button.disabled = false;
+            button.textContent = original_button_text;
+            return;
+        }
         req_data.new_owner = data.new_owner;
         req_data.reason = reason.trim();
     }
