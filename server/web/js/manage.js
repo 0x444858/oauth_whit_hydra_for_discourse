@@ -344,6 +344,7 @@ function applyNewApp(button) {
     if (!scope_input.value.trim()) error_message += '应用权限不能为空\n';
     if (error_message) {
         error_massage_p.textContent = error_message;
+        error_massage_p.style.display = 'block';
         button.disabled = false;
         button.textContent = original_button_text;
         return;
