@@ -27,9 +27,11 @@ def _validate_group_ids(value):
     return
 
 
-def _validate_url(value):
+def _validate_doc_url(value):
     if not value:
         return None
+    if '#' in value:
+        return "URL must not contain a fragment (#)"
     parsed = urlparse(value)
     if parsed.scheme not in ('http', 'https'):
         return "URL scheme must be http or https"
@@ -41,7 +43,7 @@ def _validate_url(value):
 SETTINGS_VALIDATORS = {
     'allow_new_client_apply': _validate_bool,
     'new_apply_allowed_group_ids': _validate_group_ids,
-    'doc_url': _validate_url,
+    'doc_url': _validate_doc_url,
 }
 
 

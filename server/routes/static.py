@@ -41,5 +41,6 @@ def doc_redirect():
     db = current_app.config['DB']
     url = db.get_sys_config().get('doc_url', '')
     if url:
-        return redirect(url)
+        return f'''<!DOCTYPE html>
+<html><head><meta charset="utf-8"><script>location.replace({url!r}+location.hash)</script></head></html>'''
     return '', 404

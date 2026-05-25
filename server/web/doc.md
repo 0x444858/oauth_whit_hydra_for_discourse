@@ -1,5 +1,7 @@
 # OAuth 开发者文档
 
+<a name="quickstart"></a>
+
 ## QuickStart
 
 此教程将带你走完本站完整的OAuth流程。自主注册客户端请见[客户端注册](#registerclients)。下文使用预注册好的[测试客户端](#test_clients)中的[local_test](#local_test)。
@@ -229,6 +231,8 @@ print("Response JSON:", response.json())
 
 用户信息的详细说明参见[用户信息](#userinfos)。
 
+<a name="RegisterClients"></a>
+
 ## RegisterClients
 
 ### 注册新客户端
@@ -273,6 +277,8 @@ print("Response JSON:", response.json())
 
 客户端认证方式为 `client_secret_basic`（HTTP Basic Authentication）。
 
+<a name="scope"></a>
+
 ## scope
 
 ### 可用 scope 列表
@@ -305,6 +311,8 @@ offline_access            （独立）
 
 - **不能与 `offline_access` 同时授权**：如果用户在授权页面同时勾选了 `email` 和 `offline_access`，系统会自动取消并禁用 `offline_access`
 - **token 有效期受限**：包含敏感scope的token有效期仅为30秒（由配置项 `sensitive_token_exp` 控制），过期后需重新通过完整的授权流程获取
+
+<a name="userinfos"></a>
 
 ## userInfos
 
@@ -396,6 +404,8 @@ Authorization: Bearer <access_token>
 }
 ```
 
+<a name="tokens"></a>
+
 ## tokens
 
 ### Token 类型
@@ -440,9 +450,13 @@ print(response.json())
 
 吊销操作会立即生效，被吊销的 access_token 和 refresh_token 将无法再使用。
 
+<a name="test_clients"></a>
+
 ## test_clients
 
 此处公开预注册的测试客户端的信息，方便开发测试。
+
+<a name="local_test"></a>
 
 ### local_test
 
