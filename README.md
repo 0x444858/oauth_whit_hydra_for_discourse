@@ -159,6 +159,8 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT USAGE ON SEQUE
 
 1. 复制[`config_example.yaml`](./server/config_example.yaml)为`config.yaml`。
 2. 配置文件的所有参数都要改成你的配置。
+3. 安装依赖：`pip install -r requirements.txt`
+4. 生产环境启动：`bash run_prod.sh`（自动读取 config.yaml 中的端口，用 gunicorn 启动，默认4进程）
 
 ### nginx
 
@@ -192,3 +194,7 @@ location / {
     proxy_read_timeout 60s;
 }
 ```
+
+### 设置开发者文档
+
+[doc.md](./server/web/doc.md)是一个示例的开发者文档，将其发布至您的discourse站点后，在管理员后台设置开发者文档的url为对应话题的url。

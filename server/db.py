@@ -21,7 +21,9 @@ TARGET_TYPES = {
 
 # db oauth, table sys_config
 DEFAULT_SYSTEM_CONFIGS = {
-    "allow_new_client_apply": "t"
+    "allow_new_client_apply": "t",
+    "new_apply_allowed_group_ids": "[]",
+    "doc_url": ""
 }
 
 
@@ -48,8 +50,8 @@ class DbManager:
                 port=db_conf['port']
             )
             self._run_init()
-        except Exception as e:
-            raise e
+        except Exception:
+            raise
 
     def _get_pool(self, db_type: str) -> pool.SimpleConnectionPool:
         if db_type == 'oauth':
@@ -84,7 +86,7 @@ class DbManager:
                     conn.rollback()
                 except:
                     pass
-            raise e
+            raise
         finally:
             if cur:
                 cur.close()
@@ -113,7 +115,7 @@ class DbManager:
                 reason              TEXT
             );
             CREATE TABLE IF NOT EXISTS sys_config (
-                key                 PRIMARY KEY,
+                key                 TEXT PRIMARY KEY,
                 value               TEXT
             );
         """
@@ -123,6 +125,12 @@ class DbManager:
         """
         self._execute_internal('oauth', create_table_sql)
         self._execute_internal('oauth', create_index_sql)
+        for key, value in DEFAULT_SYSTEM_CONFIGS.items():
+            self._execute_internal(
+                'oauth',
+                'INSERT INTO sys_config (key, value) VALUES (%s, %s) ON CONFLICT DO NOTHING',
+                (key, value)
+            )
 
     def close_all(self):
         if self._pool_oauth:
@@ -280,12 +288,19 @@ class DbManager:
         target_type_code = TARGET_TYPES.get(target_type.lower(), 0)
         sql = """
             INSERT INTO change_log (target_type, target_id, action_code, operator_uid, operator_username, 
-                action_reason, old_value, new_value)
+                reason, old_value, new_value)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
         self._execute_internal('oauth', sql,
                                (target_type_code, target_id, action_code, uid, username, action_reason, old_value,
                                 new_value))
+
+    def set_sys_config(self, key: str, value: str) -> None:
+        sql = """
+            INSERT INTO sys_config (key, value) VALUES (%s, %s)
+            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        """
+        self._execute_internal('oauth', sql, (key, value))
 
     def get_sys_config(self) -> dict:
         sql = """
@@ -293,3 +308,76 @@ class DbManager:
         """
         result = self._execute_internal('oauth', sql, fetch=True)
         return {row[0]: row[1] for row in result}
+
+    def get_change_logs(self, filters: dict = None, page: int = 1) -> list[dict]:
+        if page < 1:
+            page = 1
+        offset = (page - 1) * self.page_size
+        where_clauses = []
+        params_list = []
+        if filters:
+            if filters.get('target_type', '') != '':
+                where_clauses.append("target_type = %s")
+                params_list.append(int(filters['target_type']))
+            if filters.get('action_code', '') != '':
+                where_clauses.append("action_code = %s")
+                params_list.append(int(filters['action_code']))
+            if filters.get('target_id', ''):
+                where_clauses.append("target_id LIKE %s")
+                params_list.append(f"%{filters['target_id']}%")
+            if filters.get('old_value', ''):
+                where_clauses.append("old_value LIKE %s")
+                params_list.append(f"%{filters['old_value']}%")
+            if filters.get('new_value', ''):
+                where_clauses.append("new_value LIKE %s")
+                params_list.append(f"%{filters['new_value']}%")
+            if filters.get('time_start', ''):
+                where_clauses.append("EXTRACT(EPOCH FROM action_time)::BIGINT >= %s")
+                params_list.append(int(filters['time_start']))
+            if filters.get('time_end', ''):
+                where_clauses.append("EXTRACT(EPOCH FROM action_time)::BIGINT <= %s")
+                params_list.append(int(filters['time_end']))
+            if filters.get('operator_uid', ''):
+                where_clauses.append("operator_uid = %s")
+                params_list.append(int(filters['operator_uid']))
+            if filters.get('operator_username', ''):
+                where_clauses.append("operator_username LIKE %s")
+                params_list.append(f"%{filters['operator_username']}%")
+            if filters.get('reason', ''):
+                where_clauses.append("reason LIKE %s")
+                params_list.append(f"%{filters['reason']}%")
+        where_sql = ('WHERE ' + " AND ".join(where_clauses)) if where_clauses else ''
+        sql = f"""
+            SELECT
+                record_id,
+                target_type,
+                target_id,
+                EXTRACT(EPOCH FROM action_time)::BIGINT as action_time_ts,
+                action_code,
+                operator_uid,
+                operator_username,
+                old_value,
+                new_value,
+                reason
+            FROM change_log
+            {where_sql}
+            ORDER BY action_time DESC
+            LIMIT %s OFFSET %s
+        """
+        params_list.extend([self.page_size, offset])
+        result = self._execute_internal('oauth', sql, tuple(params_list), fetch=True)
+        return [
+            {
+                "record_id": row[0],
+                "target_type": row[1],
+                "target_id": row[2],
+                "action_time": row[3],
+                "action_code": row[4],
+                "operator_uid": row[5],
+                "operator_username": row[6],
+                "old_value": row[7],
+                "new_value": row[8],
+                "reason": row[9]
+            }
+            for row in result
+        ]

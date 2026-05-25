@@ -32,7 +32,7 @@ function revoke_all(button) {
 
 // 撤销单个客户端授权
 function revoke_token(button, client_id, client_name) {
-    client = client_name && client_name != client_id ? `${client_name} (ID: ${client_id})` : client_id;
+    const client = client_name && client_name != client_id ? `${client_name} (ID: ${client_id})` : client_id;
     if (!confirm(`确定要撤销应用 ${client} 的授权吗？`)) {
         return;
     }
@@ -187,6 +187,7 @@ function loadMoreAuthData(button) {
 
 // 加载更多日志数据
 let lastLogTimestamp = null;
+let myApps_page = 1;
 function loadMoreAppLog(button) {
     const t_body = document.getElementById('appLogsTableBody');
     const scope_row = document.getElementById('appLogsScopeRow');
@@ -195,7 +196,7 @@ function loadMoreAppLog(button) {
     let url = '/call/manage/appLog';
     let pd = getExtraParams();
     if (lastLogTimestamp !== null) pd = { ...pd, time_limit: lastLogTimestamp };
-    p = objectToFormString(pd);
+    const p = objectToFormString(pd);
     if (p) url += '?' + p;
     fetch(url)
         .then(response => {
@@ -343,6 +344,7 @@ function applyNewApp(button) {
     if (!scope_input.value.trim()) error_message += '应用权限不能为空\n';
     if (error_message) {
         error_massage_p.textContent = error_message;
+        error_massage_p.style.display = 'block';
         button.disabled = false;
         button.textContent = original_button_text;
         return;
@@ -360,7 +362,7 @@ function applyNewApp(button) {
         if (reset_secret && reset_secret.checked) data.reset_secret = true;
         const newApp_owner = document.getElementById('newApp_owner');
         if (newApp_owner && newApp_owner.value && window.current_user.admin) data.new_owner = newApp_owner.value;
-        return updateApp(data, button);
+        return updateApp(data, button, original_button_text);
     }
     fetch(url, {
         method: 'POST',
@@ -372,7 +374,7 @@ function applyNewApp(button) {
         .then(response => {
             if (!response.ok) {
                 return response.text().then(text => {
-                    alert(text + `请求失败: ${response.status}`);
+                    throw new Error(text || `HTTP ${response.status}`);
                 });
             }
             return response.json();
@@ -392,10 +394,12 @@ function applyNewApp(button) {
             for (let i = 0; i < spans.length; i++) {
                 spans[i].textContent = texts[i];
             }
-            return;
+            button.disabled = false;
+            button.textContent = original_button_text;
         })
         .catch(error => {
-            alert('申请新应用失败:', error);
+            console.error('申请新应用失败:', error);
+            alert('申请失败：' + error.message);
             button.disabled = false;
             button.textContent = original_button_text;
         })
@@ -426,12 +430,19 @@ function resetApplyNewApp(needConfirm = true) {
     if (error_message) error_message.style.display = 'none';
     const clientOwnerRow = document.getElementById('clientOwnerRow');
     if (clientOwnerRow) clientOwnerRow.style.display = 'none';
+    const deleteBtn = document.getElementById('deleteAppBtn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
     newAppPageMode = 'new';
 }
 
 // 加载更多我的应用
-function loadMoreMyApps(button, page = 1, reload = false) {
-    if (reload) myApps_page = 1;
+function loadMoreMyApps(button, page = null, reload = false) {
+    if (reload) {
+        myApps_page = 1;
+        const t_body = document.getElementById('myAppTableBody');
+        if (t_body) t_body.innerHTML = '';
+    }
+    if (page === null) page = myApps_page;
     const original_button_text = button.textContent;
     button.disabled = true;
     button.textContent = '加载中...';
@@ -444,8 +455,8 @@ function loadMoreMyApps(button, page = 1, reload = false) {
         });
     }
     const t_body = document.getElementById('myAppTableBody');
-    let url = '/call/manage/MyApps';
-    p = objectToFormString({ ...getExtraParams(), page: page })
+    let url = '/call/manage/myApps';
+    const p = objectToFormString({ ...getExtraParams(), page: page });
     if (p) url += '?' + p;
     fetch(url)
         .then(response => {
@@ -468,11 +479,11 @@ function loadMoreMyApps(button, page = 1, reload = false) {
                 cellName.textContent = item.client_name;
                 row.appendChild(cellName);
                 const cellOwner = document.createElement('td');
-                cellOwner.textContent = item.owner === window.current_user.id ? window.current_user.username : `(UID: ${item.owner})`;
+                cellOwner.textContent = item.owner == window.current_user.id ? window.current_user.username : `(UID: ${item.owner})`;
                 row.appendChild(cellOwner);
                 const cellTime = document.createElement('td');
-                const createdStr = formatTimestamp(item.created_at);
-                const updatedStr = formatTimestamp(item.updated_at);
+                const createdStr = formatDate(item.created_at);
+                const updatedStr = formatDate(item.updated_at);
                 cellTime.innerHTML = `${createdStr}<br>${updatedStr}`;
                 row.appendChild(cellTime);
                 const cellUri = document.createElement('td');
@@ -518,7 +529,7 @@ function loadMoreMyApps(button, page = 1, reload = false) {
 
 // 填入已有的应用设置
 function manageApp(client_id) {
-    originClientData = window.client_data[client_id];
+    const originClientData = window.client_data[client_id];
     if (originClientData === undefined) {
         alert(`Client ID: ${client_id} 无效`);
         return;
@@ -539,33 +550,87 @@ function manageApp(client_id) {
     client_id_input.disabled = true;
     client_name.value = originClientData.client_name;
     scope_input.value = originClientData.scope;
-    const redirect_uris = originClientData.redirect_uris;
+    const redirect_uris = Array.isArray(originClientData.redirect_uris)
+        ? originClientData.redirect_uris
+        : (originClientData.redirect_uris ? [originClientData.redirect_uris] : []);
     resetRedirectUris(false);
     redirect_uris.forEach(uri => {
         addRedirectUri(uri);
     });
     const clientSecretRow = document.getElementById('clientSecretRow');
-    if (clientSecretRow) clientSecretRow.style.display = 'block';
+    if (clientSecretRow) clientSecretRow.style.display = 'table-row';
     const clientOwnerRow = document.getElementById('clientOwnerRow');
-    if (clientOwnerRow && window.current_user.admin) clientOwnerRow.style.display = 'block';
+    if (clientOwnerRow && window.current_user.admin) clientOwnerRow.style.display = 'table-row';
+    const deleteBtn = document.getElementById('deleteAppBtn');
+    if (deleteBtn) deleteBtn.style.display = 'inline-block';
     toggleNewAppTab();
 }
 
-// 推送更改的设置
-function updateApp(data, button) {
+// 删除应用
+function deleteApp(triggerBtn) {
+    const client_id_input = document.getElementById('newApp_client_id');
+    if (!client_id_input || !client_id_input.value) {
+        alert('无法获取应用ID');
+        return;
+    }
+    const client_id = client_id_input.value;
+    const client_name = document.getElementById('newApp_client_name')?.value || client_id;
+    if (!confirm(`确定要删除应用 ${client_name} (ID: ${client_id}) 吗？此操作不可逆！`)) {
+        return;
+    }
+    triggerBtn.disabled = true;
+    triggerBtn.textContent = '删除中...';
+    const formData = new URLSearchParams();
+    formData.append('client_id', client_id);
+    fetch('/call/manage/deleteApp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString()
+    })
+        .then(response => {
+            if (response.status === 204) {
+                alert('应用已删除');
+                resetApplyNewApp(false);
+                toggleNewAppTab();
+                const myAppEl = document.getElementById('myApp');
+                const loadBtn = myAppEl && myAppEl.querySelector('button.c');
+                if (loadBtn) loadMoreMyApps(loadBtn, 1, true);
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || `HTTP ${response.status}`);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('删除应用失败:', error);
+            alert('删除失败：' + error.message);
+            triggerBtn.disabled = false;
+            triggerBtn.textContent = '删除应用';
+        });
+}
+function updateApp(data, button, original_button_text) {
     const client_id = data.client_id;
-    originClientData = window.client_data[client_id];
+    const originClientData = window.client_data[client_id];
     if (originClientData === undefined) {
         alert(`Client ID: ${client_id} 无效`);
+        button.disabled = false;
+        button.textContent = original_button_text;
         return;
     }
     const req_data = {};
     if (data.new_owner && window.current_user.admin) {
         const reason = prompt('您正在以管理员身份更改此应用的所有者，请输入操作理由\n留空自动取消操作');
-        if (reason === null || !reason.trim()) return;
+        if (reason === null || !reason.trim()) {
+            button.disabled = false;
+            button.textContent = original_button_text;
+            return;
+        }
         req_data.new_owner = data.new_owner;
         req_data.reason = reason.trim();
     }
+    req_data.client_id = client_id;
     req_data.client_name = data.client_name;
     req_data.scope = data.scope;
     req_data.redirect_uris = data.redirect_uris;
@@ -581,7 +646,7 @@ function updateApp(data, button) {
         .then(response => {
             if (!response.ok) {
                 return response.text().then(text => {
-                    alert(text + `请求失败: ${response.status}`);
+                    throw new Error(text || `HTTP ${response.status}`);
                 });
             }
             return response.json();
@@ -601,10 +666,12 @@ function updateApp(data, button) {
             for (let i = 0; i < spans.length; i++) {
                 spans[i].textContent = texts[i];
             }
-            return;
+            button.disabled = false;
+            button.textContent = original_button_text;
         })
         .catch(error => {
-            alert('更改应用失败:', error);
+            console.error('更改应用失败:', error);
+            alert('更改失败：' + error.message);
             button.disabled = false;
             button.textContent = original_button_text;
         })

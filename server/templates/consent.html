@@ -203,13 +203,17 @@
     </div>
 </div>
 
-<script nonce="{{ nonce }}">
-    const consentInfo = {{ consent_info | safe }};
-    const USER_PAGE_URL_PREFIX = "{{ user_page_url_prefix }}";
-    const SENSITIVE_SCOPES_LIST = {{sensitive_scopes_list | safe}};
+<script type="application/json" id="consent-info">
+{{ consent_info | safe }}
+</script>
+<script type="application/json" id="sensitive-scopes">
+{{ sensitive_scopes_list | safe }}
 </script>
 
 <script nonce="{{ nonce }}">
+    const consentInfo = JSON.parse(document.getElementById('consent-info').textContent);
+    const USER_PAGE_URL_PREFIX = "{{ user_page_url_prefix }}";
+    const SENSITIVE_SCOPES_LIST = JSON.parse(document.getElementById('sensitive-scopes').textContent);
     // ===========配置开始==============
     const SCOPE_CONFIG = {
         'openid': {
@@ -419,7 +423,7 @@
     function getGrantedScopes() {
         const granted = [];
         document.querySelectorAll('.scope-checkbox').forEach(cb => {
-            if (cb.disabled || cb.checked) {
+            if (cb.checked) {
               granted.push(cb.dataset.scope);
             }
         });
