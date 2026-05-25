@@ -350,6 +350,11 @@ function applyNewApp(button) {
         return;
     }
     error_massage_p.textContent = '';
+    if (!confirm('确认提交？')) {
+        button.disabled = false;
+        button.textContent = original_button_text;
+        return;
+    }
     const url = '/call/manage/applyNewApp';
     const data = {
         client_id: client_id_input.value,
