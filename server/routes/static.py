@@ -16,6 +16,7 @@ ADMIN_ROUTES = {
     'admin': 'web/manage.html',
     'js/admin.js': 'web/js/admin.js',
     'admin.html': 'web/admin.html',
+    'css/admin.css': 'web/css/admin.css'
 }
 
 

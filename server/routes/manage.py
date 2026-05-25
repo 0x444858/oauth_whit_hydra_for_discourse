@@ -139,15 +139,17 @@ def apply_new_app():
         if sys_configs.get('allow_new_client_apply') == 'f':
             return 'New client apply is not allowed', 403
         allowed_ids_str = sys_configs.get('new_apply_allowed_group_ids', '')
-        if allowed_ids_str:
-            try:
-                allowed_ids = json.loads(allowed_ids_str)
-            except json.JSONDecodeError:
-                allowed_ids = []
-            if allowed_ids:
-                user_groups = c_u.get('groups', [])
-                if not {g['id'] for g in user_groups}.intersection(allowed_ids):
-                    return 'You are not in an allowed group', 403
+        if not allowed_ids_str:
+            return 'No allowed groups configured', 403
+        try:
+            allowed_ids = json.loads(allowed_ids_str)
+        except json.JSONDecodeError:
+            return 'Invalid allowed groups configuration', 500
+        if not allowed_ids:
+            return 'No allowed groups configured', 403
+        user_groups = c_u.get('groups', [])
+        if not {g['id'] for g in user_groups}.intersection(allowed_ids):
+            return 'You are not in an allowed group', 403
     uid = c_u.get('id')
     username = c_u.get('username')
     try:

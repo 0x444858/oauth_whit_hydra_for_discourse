@@ -294,13 +294,12 @@ function saveGroupChanges(btn) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             _serverGroupIds = [..._currentGroupIds];
             _updateGroupActionButtons();
+            if (btn) { btn.textContent = '确认更改'; }
         })
         .catch(function (e) {
             alert('保存群组设置失败：' + e.message);
             _updateGroupActionButtons();
-        })
-        .finally(function () {
-            if (btn) { btn.disabled = false; btn.textContent ='确认更改'; }
+            if (btn) { btn.disabled = false; btn.textContent = '确认更改'; }
         });
 }
 
@@ -326,12 +325,11 @@ function saveDocUrl(btn) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             _serverDocUrl = value;
             _updateDocUrlButtons();
+            if (btn) { btn.textContent = '确认更改'; }
         })
         .catch(function (e) {
             alert('保存文档URL失败：' + e.message);
             _updateDocUrlButtons();
-        })
-        .finally(function () {
             if (btn) { btn.disabled = false; btn.textContent = '确认更改'; }
         });
 }
