@@ -47,7 +47,7 @@ def file_sender(path):
     ROUTES = PUBLIC_ROUTES | USER_ROUTES | ADMIN_ROUTES
     if path in ROUTES:
         return send_file(ROUTES[path])
-    return '', 404
+    return '404', 404
 
 
 if __name__ == '__main__':

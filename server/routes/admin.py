@@ -52,7 +52,7 @@ def admin_required(f):
     def decorated(*args, **kwargs):
         c_u = get_user_info_current_session(request)
         if c_u is None or c_u.get('admin') is not True:
-            return '', 404
+            return '404', 404
         return f(*args, **kwargs)
 
     return decorated

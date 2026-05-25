@@ -30,11 +30,11 @@ def file_sender(path):
         return redirect(cfg['discourse_login_url'])
     if path in ADMIN_ROUTES:
         if c_u.get('admin') is not True:
-            return '', 404
+            return '404', 404
         return send_file(ADMIN_ROUTES[path])
     elif path in USER_ROUTES:
         return send_file(USER_ROUTES[path])
-    return '', 404
+    return '404', 404
 
 
 @static_bp.route('/call/doc')
@@ -44,4 +44,4 @@ def doc_redirect():
     if url:
         return f'''<!DOCTYPE html>
 <html><head><meta charset="utf-8"><script>location.replace({url!r}+location.hash)</script></head></html>'''
-    return '', 404
+    return '管理员未配置文档地址', 404
